@@ -189,6 +189,15 @@ canvas.sig{border:2px solid var(--gris-brd);width:100%;background:#FAFAFA;touch-
       <div class="resume-bloc" id="resume"></div>
       <div class="field" style="margin-top:12px;"><label>Remarques finales</label><textarea id="r_remarques" placeholder="Observations finales du CoSS..."></textarea></div>
       <div style="margin-top:10px;">
+        <div class="card-hdr h-rougeD" style="padding:8px 12px;font-size:10px;margin-bottom:8px;">🦺 Pause sécurité — Bilan et infractions</div>
+        <div class="field"><label>Période des observations (ex: semaines du 23 avril au 1er mai)</label><input type="text" id="pause_periode" placeholder="Ex: semaines du 23 avril au 1er mai 2026"></div>
+        <div class="field"><label>Bilan des observations (texte libre)</label><textarea id="pause_bilan" style="min-height:70px;resize:vertical;border:1px solid var(--gris-brd);padding:9px;font-size:13px;font-family:Arial;outline:none;width:100%;"></textarea></div>
+        <div class="field">
+          <label>Infractions les plus fréquentes (cochez)</label>
+          <div id="infr-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:4px;max-height:200px;overflow-y:auto;border:1px solid var(--gris-brd);padding:6px;background:var(--gris-l);"></div>
+        </div>
+      </div>
+      <div style="margin-top:10px;">
         <label style="font-size:10px;font-weight:700;color:var(--rouge);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Signature de l&#39;agent de prévention</label>
         <canvas class="sig" id="sig_coss" height="110"></canvas>
         <button class="btn-clear" onclick="clearSig('sig_coss')">Effacer</button>
@@ -210,10 +219,11 @@ canvas.sig{border:2px solid var(--gris-brd);width:100%;background:#FAFAFA;touch-
 <div class="toast" id="toast"></div>
 
 <script>
-var APPS_URL = "https://script.google.com/macros/s/AKfycbxOy41mCXdxVwiPw0SU0P7dqL48xF5xBIivUNc07dAMbpmRuiu6Tn-4yOK-zt7LhhmZFg/exec";
-var D = {"pause": "Le sujet est mis en pause sécurité et tous les contremaîtres/responsables présents au comité sont avisés. Un suivi sera effectué lors de la prochaine rencontre. Aucun commentaire n'a été émis suite à l'explication du sujet.", "sujets": [{"titre": "Chute de hauteur de plus de 3 m (tolérance 0)", "ref": "CSTC art. 2.9", "points": ["Modifier la position de travail afin de ne pas être en risque de chute.", "Équipement de protection collective (garde-corps, ligne d'avertissement).", "Dernier recours : équipement de protection individuelle.", "Enrouleur-dérouleur contre les arêtes vives pour les ancrages sous l'anneau dorsal en D.", "Utilisation d'une corde d'assurance verticale avec coulisseau et longe de 32 po max de longueur (l'ancrage doit toujours être en haut de l'anneau dorsal en D).", "La corde d'assurance verticale peut être utilisée sous l'anneau dorsal en D si elle sert de système de retenue (limitation de déplacement)."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Échelle et escabeau (tolérance 0)", "ref": "CSTC art. 3.5", "points": ["L'échelle doit toujours être installée sur un sol stable.", "L'échelle doit toujours être attachée solidement à la structure pour éviter un renversement.", "L'échelle doit avoir un angle de 1 pied de recul pour 4 pieds de hauteur et dépasser de 900 mm le palier supérieur.", "Toujours avoir 3 points d'appui quand on monte dans un accès."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Signaux de danger et zone de sécurité", "ref": "CSTC art. 3.2.5", "points": ["Un périmètre doit être effectué quand des travaux en hauteur sont faits : au-dessus des entrées, au-dessus des passages piétonniers, quand des travailleurs sont susceptibles de passer sous une nacelle aérienne, une charge ou un levage de matériel.", "Aucun travail superposé."], "suivi": "Quotidien", "cat": "general"}, {"titre": "Inspection des appareils de levage", "ref": "CSTC art. 2.15.2 / 3.10.1, RSST 245.1", "points": ["Obligatoire avant la première utilisation et par écrit (formulaire disponible).", "Carte d'opérateur OBLIGATOIRE.", "Inspection quotidienne consignée au registre."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Silice cristalline (tolérance 0)", "ref": "CSTC art. 3.25", "points": ["Méthode de travail réduisant l'émission de poussière (eau, aspiration à la source).", "Protection respiratoire adaptée obligatoire.", "Délimitation de la zone de travail."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Cadenassage (LOTO)", "ref": "CSTC art. 2.20", "points": ["Toute source d'énergie doit être cadenassée avant intervention.", "Chaque travailleur appose son propre cadenas.", "Vérification de l'absence d'énergie résiduelle avant le travail."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Protection respiratoire", "ref": "CSTC art. 2.10.8", "points": ["Port de l'appareil de protection respiratoire adapté au contaminant.", "Test d'ajustement (fit test) valide.", "Entretien et entreposage adéquats des masques."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Manutention sécuritaire des charges", "ref": "RSST art. 255", "points": ["Évaluer le poids et la prise avant de soulever.", "Plier les genoux, garder le dos droit.", "Demander de l'aide ou utiliser un équipement pour les charges lourdes."], "suivi": "Quotidien", "cat": "general"}, {"titre": "Travaux à chaud", "ref": "CSTC art. 3.4 / SIMDUT", "points": ["Permis de travail à chaud obligatoire.", "Extincteur à proximité et surveillance après les travaux.", "Retrait des matières combustibles de la zone."], "suivi": "Selon travaux", "cat": "general"}, {"titre": "Excavation et tranchée", "ref": "CSTC art. 3.15", "points": ["Étançonnement obligatoire pour toute tranchée de plus de 1,2 m.", "Vérifier la stabilité du sol (CSTC 3.15.2).", "Localisation des services publics avant l'excavation."], "suivi": "Selon travaux", "cat": "general"}, {"titre": "Garde-corps", "ref": "CSTC art. 3.8", "points": ["Garde-corps supérieur entre 900 et 1070 mm.", "Lisse intermédiaire à mi-hauteur.", "Plinthe (garde-pied) de 150 mm minimum."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Protection des yeux et du visage", "ref": "CSTC art. 2.10.5", "points": ["Lunettes de sécurité obligatoires en tout temps sur le chantier.", "Écran facial pour le meulage, la découpe et les projections.", "Protection adaptée au risque de la tâche."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Casque de sécurité", "ref": "CSTC art. 2.10.3", "points": ["Port du casque obligatoire en tout temps, même en fin de chantier.", "Casque conforme et en bon état.", "Jugulaire pour les travaux en hauteur."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Bruit", "ref": "CSTC art. 2.21", "points": ["Protection auditive obligatoire dans les zones bruyantes.", "Réduire le bruit à la source quand possible.", "Affichage des zones à port obligatoire."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Produits dangereux et SIMDUT", "ref": "CSTC art. 3.16.10", "points": ["Fiches de données de sécurité disponibles sur le chantier.", "Étiquetage conforme des contenants.", "Entreposage selon les recommandations du fabricant."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Sortie de nacelle interdite", "ref": "CSTC art. 2.15.2.10", "points": ["Interdiction de sortir de la plateforme en hauteur.", "Ne jamais monter sur les garde-corps.", "Harnais attaché au point d'ancrage de la nacelle en tout temps."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Prévention du suicide en construction", "ref": "Construction en santé", "points": ["Ressources d'aide disponibles et affichées (APSAM, PAE).", "Être attentif aux signes de détresse chez les collègues.", "Briser l'isolement, oser parler."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Tenue des lieux et propreté", "ref": "CSTC art. 3.2", "points": ["Maintenir les aires de travail propres et dégagées.", "Disposer les débris dans les contenants prévus.", "Dégager les voies de circulation et issues."], "suivi": "Quotidien", "cat": "general"}, {"titre": "Circulation routière à proximité (chantier de viaduc)", "ref": "CSTC art. 2.8.1 / Norme MTQ T-RV-7", "points": ["Signalisation routière conforme aux normes du MTQ (cônes, panneaux, atténuateurs d'impact).", "Port du dossard de sécurité haute visibilité de classe 2 ou 3 en tout temps.", "Signaleur de chantier positionné et formé pour diriger la circulation.", "Délimitation physique entre la zone de travail et la voie de circulation (glissières, barrières).", "Aucun travailleur ne doit tourner le dos à la circulation sans protection."], "suivi": "Quotidien", "cat": "viaduc"}, {"titre": "Chute de hauteur — travaux sur structure de viaduc", "ref": "CSTC art. 2.9 / tolérance 0", "points": ["Système d'ancrage certifié sur la structure, toujours au-dessus de l'anneau dorsal en D.", "Garde-corps ou filet de sécurité sur les bords du tablier et des poutres.", "Harnais avec absorbeur d'énergie obligatoire pour tout travail en hauteur.", "Plan de sauvetage en hauteur établi et communiqué.", "Aucun travail au-dessus de la circulation sans protection contre les chutes d'objets."], "suivi": "En tout temps", "cat": "viaduc"}, {"titre": "Poussière et silice (sciage, forage de béton)", "ref": "CSTC art. 3.25 / tolérance 0 CNESST", "points": ["Méthode humide ou aspiration à la source pour le sciage et le forage du béton.", "Protection respiratoire adaptée (demi-masque P100 minimum).", "Délimitation et signalisation de la zone de production de poussière.", "Rotation des travailleurs pour limiter l'exposition."], "suivi": "En tout temps", "cat": "viaduc"}, {"titre": "Risque biologique — excréments de pigeon (histoplasmose)", "ref": "RSST art. 3 / LSST art. 51", "points": ["Les excréments de pigeon peuvent contenir des champignons causant l'histoplasmose et la cryptococcose.", "Humidifier les déjections avant le nettoyage pour éviter la mise en suspension.", "Port d'un appareil de protection respiratoire (N95 minimum, P100 recommandé).", "Combinaison jetable, gants et lunettes étanches obligatoires.", "Décontamination des vêtements et lavage des mains après l'intervention.", "Disposer les déchets dans des sacs scellés identifiés."], "suivi": "Selon travaux", "cat": "viaduc"}, {"titre": "Excavation et tranchée (culées, fondations)", "ref": "CSTC art. 3.15", "points": ["Étançonnement obligatoire pour toute tranchée de plus de 1,2 m de profondeur.", "Vérifier la stabilité du sol et la présence d'eau (CSTC 3.15.2).", "Localisation des services publics souterrains avant toute excavation.", "Maintenir les déblais à au moins 1,2 m du bord de l'excavation.", "Accès sécuritaire (échelle) à moins de 7,5 m du travailleur."], "suivi": "Selon travaux", "cat": "viaduc"}, {"titre": "Machinerie lourde et angles morts", "ref": "CSTC art. 2.8.5 / RSST 245", "points": ["Signaleur obligatoire pour les manœuvres de recul.", "Établir et respecter les zones d'exclusion autour de la machinerie.", "Contact visuel avec l'opérateur avant d'approcher.", "Alarme de recul et gyrophare fonctionnels.", "Aucun travailleur dans le rayon de rotation de la pelle ou de la grue."], "suivi": "Quotidien", "cat": "viaduc"}, {"titre": "Levage et grutage (poutres, sections de tablier)", "ref": "CSTC art. 2.15 / 3.10", "points": ["Plan de levage établi pour les charges critiques.", "Élingues et accessoires inspectés avant chaque levage.", "Périmètre de sécurité sous la charge — aucun travailleur sous une charge suspendue.", "Signaleur qualifié et communication radio avec le grutier.", "Vérification de la capacité de la grue selon le rayon."], "suivi": "Selon travaux", "cat": "viaduc"}, {"titre": "Travail au-dessus de l'eau", "ref": "CSTC art. 2.9 / RSST", "points": ["Veste de flottaison individuelle (VFI) obligatoire près de l'eau.", "Bouée de sauvetage et embarcation de secours disponibles.", "Plan de sauvetage nautique établi.", "Garde-corps ou filets sur les bords exposés au-dessus de l'eau."], "suivi": "Selon travaux", "cat": "viaduc"}, {"titre": "Bétonnage et coffrage", "ref": "CSTC art. 3.12", "points": ["Coffrages conçus et étayés par une personne qualifiée.", "Protection de la peau contre le béton frais (brûlures chimiques).", "Rinçage immédiat en cas de contact avec le béton.", "Vérification de la stabilité des coffrages avant la coulée."], "suivi": "Selon travaux", "cat": "viaduc"}, {"titre": "Travaux à chaud — soudure sur structure d'acier", "ref": "CSTC art. 3.4 / 2.10", "points": ["Permis de travail à chaud obligatoire.", "Écran de soudage et protection des yeux pour les travailleurs à proximité.", "Extincteur à portée de main et surveillance après les travaux.", "Ventilation adéquate contre les fumées de soudage.", "Protection contre les chutes d'étincelles vers la circulation en contrebas."], "suivi": "Selon travaux", "cat": "viaduc"}], "procedure": [{"titre": "Ouverture de la réunion et lecture de l'ordre du jour", "texte": "L'agent de prévention souhaite la bienvenue aux participants et propose l'ouverture de la réunion. Lecture de l'ordre du jour et des points varia. L'ordre du jour est adopté tel que présenté.", "action": "Agent", "suivi": "Aucun"}, {"titre": "Adoption du procès-verbal de la réunion précédente", "texte": "Le procès-verbal de la réunion précédente a été rendu disponible aux participants. Aucun commentaire ni correction n'a été soulevé. Le procès-verbal est adopté tel que présenté.", "action": "Agent", "suivi": "Aucun"}, {"titre": "Présence des participants", "texte": "Une feuille de présence est distribuée et tous les participants sont invités à signer afin de confirmer leur présence.", "action": "Tous", "suivi": "Aucun"}], "procedure_fin": [{"titre": "Suivi des accidents et incidents", "type": "oui_non", "question": "Un accident ou incident est-il survenu depuis la dernière réunion?", "texte_non": "Aucun accident ni incident depuis la dernière réunion.", "placeholder": "Décrivez l'accident/incident, les mesures prises et le suivi...", "action": "Agent", "suivi": "Aucun"}, {"titre": "Suivi des rapports et visites de la CNESST", "type": "oui_non", "question": "Une visite ou un rapport de la CNESST a-t-il eu lieu depuis la dernière réunion?", "texte_non": "Aucune visite ni rapport de la CNESST depuis la dernière réunion.", "placeholder": "Décrivez la visite, les constats, les avis de correction et le suivi...", "action": "Agent", "suivi": "Aucun"}, {"titre": "Suivi des points de la réunion précédente", "type": "texte", "texte": "Les points soulevés lors de la dernière réunion ont fait l'objet d'un suivi. Aucun point en suspens.", "action": "Agent", "suivi": "Aucun", "editable": true}, {"titre": "Pauses sécurité (toolbox)", "type": "texte", "texte": "Tous les sous-traitants doivent remettre à l'agent de sécurité leur pause sécurité au plus tard le vendredi suivant le comité. Les items discutés doivent y paraître. Pour les sous-traitants présents temporairement, la pause sécurité doit se faire le jour même.", "action": "Tous", "suivi": "", "editable": true}, {"titre": "Questions et commentaires des représentants", "type": "texte", "texte": "Les représentants ont été invités à soulever toute question ou préoccupation relative à la santé et la sécurité. Aucune question n'a été soulevée par les participants.", "action": "Tous", "suivi": "Aucun", "editable": true}, {"titre": "Varia (points divers)", "type": "varia", "texte": "", "placeholder": "Inscrivez ici tout point divers soulevé en réunion qui n'était pas prévu à l'ordre du jour (ex: demande d'un travailleur, sujet ponctuel, information à transmettre)...", "action": "", "suivi": ""}], "questions_hq": ["Est-ce qu'on connaît la façon sécuritaire de faire le travail?", "Est-ce qu'on a tout ce qu'il faut (méthode, outils, EPI, checklist)?", "Est-ce que je vais créer du risque pour moi ou pour les autres?", "Est-ce qu'on a neutralisé tous les risques avant de débuter les travaux?"], "cnesst_champs": {"ordre_jour_approuve": "Ordre du jour approuvé", "pv_adopte": "Procès-verbal adopté", "accident_incident": "Accident ou incident survenu sur le chantier", "sujets_proposes": "Sujets proposés par des membres et acceptés"}};
+var APPS_URL = "https://script.google.com/macros/s/AKfycbytuCPaOLcBrw_zj78FUZLw7ExbWNnBWODkkKY8knpmPFZiWeIAKDOk_oICn9GHfw3adg/exec";
+var D = {"pause": "Le sujet est mis en pause sécurité et tous les contremaîtres/responsables présents au comité sont avisés. Un suivi sera effectué lors de la prochaine rencontre. Aucun commentaire n'a été émis suite à l'explication du sujet.", "sujets": [{"titre": "Chute de hauteur de plus de 3 m (tolérance 0)", "ref": "CSTC art. 2.9", "points": ["Modifier la position de travail afin de ne pas être en risque de chute.", "Équipement de protection collective (garde-corps, ligne d'avertissement).", "Dernier recours : équipement de protection individuelle.", "Enrouleur-dérouleur contre les arêtes vives pour les ancrages sous l'anneau dorsal en D.", "Utilisation d'une corde d'assurance verticale avec coulisseau et longe de 32 po max de longueur (l'ancrage doit toujours être en haut de l'anneau dorsal en D).", "La corde d'assurance verticale peut être utilisée sous l'anneau dorsal en D si elle sert de système de retenue (limitation de déplacement)."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Échelle et escabeau (tolérance 0)", "ref": "CSTC art. 3.5", "points": ["L'échelle doit toujours être installée sur un sol stable.", "L'échelle doit toujours être attachée solidement à la structure pour éviter un renversement.", "L'échelle doit avoir un angle de 1 pied de recul pour 4 pieds de hauteur et dépasser de 900 mm le palier supérieur.", "Toujours avoir 3 points d'appui quand on monte dans un accès."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Signaux de danger et zone de sécurité", "ref": "CSTC art. 3.2.5", "points": ["Un périmètre doit être effectué quand des travaux en hauteur sont faits : au-dessus des entrées, au-dessus des passages piétonniers, quand des travailleurs sont susceptibles de passer sous une nacelle aérienne, une charge ou un levage de matériel.", "Aucun travail superposé."], "suivi": "Quotidien", "cat": "general"}, {"titre": "Inspection des appareils de levage", "ref": "CSTC art. 2.15.2 / 3.10.1, RSST 245.1", "points": ["Obligatoire avant la première utilisation et par écrit (formulaire disponible).", "Carte d'opérateur OBLIGATOIRE.", "Inspection quotidienne consignée au registre."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Silice cristalline (tolérance 0)", "ref": "CSTC art. 3.25", "points": ["Méthode de travail réduisant l'émission de poussière (eau, aspiration à la source).", "Protection respiratoire adaptée obligatoire.", "Délimitation de la zone de travail."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Cadenassage (LOTO)", "ref": "CSTC art. 2.20", "points": ["Toute source d'énergie doit être cadenassée avant intervention.", "Chaque travailleur appose son propre cadenas.", "Vérification de l'absence d'énergie résiduelle avant le travail."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Protection respiratoire", "ref": "CSTC art. 2.10.8", "points": ["Port de l'appareil de protection respiratoire adapté au contaminant.", "Test d'ajustement (fit test) valide.", "Entretien et entreposage adéquats des masques."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Manutention sécuritaire des charges", "ref": "RSST art. 255", "points": ["Évaluer le poids et la prise avant de soulever.", "Plier les genoux, garder le dos droit.", "Demander de l'aide ou utiliser un équipement pour les charges lourdes."], "suivi": "Quotidien", "cat": "general"}, {"titre": "Travaux à chaud", "ref": "CSTC art. 3.4 / SIMDUT", "points": ["Permis de travail à chaud obligatoire.", "Extincteur à proximité et surveillance après les travaux.", "Retrait des matières combustibles de la zone."], "suivi": "Selon travaux", "cat": "general"}, {"titre": "Excavation et tranchée", "ref": "CSTC art. 3.15", "points": ["Étançonnement obligatoire pour toute tranchée de plus de 1,2 m.", "Vérifier la stabilité du sol (CSTC 3.15.2).", "Localisation des services publics avant l'excavation."], "suivi": "Selon travaux", "cat": "general"}, {"titre": "Garde-corps", "ref": "CSTC art. 3.8", "points": ["Garde-corps supérieur entre 900 et 1070 mm.", "Lisse intermédiaire à mi-hauteur.", "Plinthe (garde-pied) de 150 mm minimum."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Protection des yeux et du visage", "ref": "CSTC art. 2.10.5", "points": ["Lunettes de sécurité obligatoires en tout temps sur le chantier.", "Écran facial pour le meulage, la découpe et les projections.", "Protection adaptée au risque de la tâche."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Casque de sécurité", "ref": "CSTC art. 2.10.3", "points": ["Port du casque obligatoire en tout temps, même en fin de chantier.", "Casque conforme et en bon état.", "Jugulaire pour les travaux en hauteur."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Bruit", "ref": "CSTC art. 2.21", "points": ["Protection auditive obligatoire dans les zones bruyantes.", "Réduire le bruit à la source quand possible.", "Affichage des zones à port obligatoire."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Produits dangereux et SIMDUT", "ref": "CSTC art. 3.16.10", "points": ["Fiches de données de sécurité disponibles sur le chantier.", "Étiquetage conforme des contenants.", "Entreposage selon les recommandations du fabricant."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Sortie de nacelle interdite", "ref": "CSTC art. 2.15.2.10", "points": ["Interdiction de sortir de la plateforme en hauteur.", "Ne jamais monter sur les garde-corps.", "Harnais attaché au point d'ancrage de la nacelle en tout temps."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Prévention du suicide en construction", "ref": "Construction en santé", "points": ["Ressources d'aide disponibles et affichées (APSAM, PAE).", "Être attentif aux signes de détresse chez les collègues.", "Briser l'isolement, oser parler."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Tenue des lieux et propreté", "ref": "CSTC art. 3.2", "points": ["Maintenir les aires de travail propres et dégagées.", "Disposer les débris dans les contenants prévus.", "Dégager les voies de circulation et issues."], "suivi": "Quotidien", "cat": "general"}, {"titre": "Circulation routière à proximité (chantier de viaduc)", "ref": "CSTC art. 2.8.1 / Norme MTQ T-RV-7", "points": ["Signalisation routière conforme aux normes du MTQ (cônes, panneaux, atténuateurs d'impact).", "Port du dossard de sécurité haute visibilité de classe 2 ou 3 en tout temps.", "Signaleur de chantier positionné et formé pour diriger la circulation.", "Délimitation physique entre la zone de travail et la voie de circulation (glissières, barrières).", "Aucun travailleur ne doit tourner le dos à la circulation sans protection."], "suivi": "Quotidien", "cat": "viaduc"}, {"titre": "Chute de hauteur — travaux sur structure de viaduc", "ref": "CSTC art. 2.9 / tolérance 0", "points": ["Système d'ancrage certifié sur la structure, toujours au-dessus de l'anneau dorsal en D.", "Garde-corps ou filet de sécurité sur les bords du tablier et des poutres.", "Harnais avec absorbeur d'énergie obligatoire pour tout travail en hauteur.", "Plan de sauvetage en hauteur établi et communiqué.", "Aucun travail au-dessus de la circulation sans protection contre les chutes d'objets."], "suivi": "En tout temps", "cat": "viaduc"}, {"titre": "Poussière et silice (sciage, forage de béton)", "ref": "CSTC art. 3.25 / tolérance 0 CNESST", "points": ["Méthode humide ou aspiration à la source pour le sciage et le forage du béton.", "Protection respiratoire adaptée (demi-masque P100 minimum).", "Délimitation et signalisation de la zone de production de poussière.", "Rotation des travailleurs pour limiter l'exposition."], "suivi": "En tout temps", "cat": "viaduc"}, {"titre": "Risque biologique — excréments de pigeon (histoplasmose)", "ref": "RSST art. 3 / LSST art. 51", "points": ["Les excréments de pigeon peuvent contenir des champignons causant l'histoplasmose et la cryptococcose.", "Humidifier les déjections avant le nettoyage pour éviter la mise en suspension.", "Port d'un appareil de protection respiratoire (N95 minimum, P100 recommandé).", "Combinaison jetable, gants et lunettes étanches obligatoires.", "Décontamination des vêtements et lavage des mains après l'intervention.", "Disposer les déchets dans des sacs scellés identifiés."], "suivi": "Selon travaux", "cat": "viaduc"}, {"titre": "Excavation et tranchée (culées, fondations)", "ref": "CSTC art. 3.15", "points": ["Étançonnement obligatoire pour toute tranchée de plus de 1,2 m de profondeur.", "Vérifier la stabilité du sol et la présence d'eau (CSTC 3.15.2).", "Localisation des services publics souterrains avant toute excavation.", "Maintenir les déblais à au moins 1,2 m du bord de l'excavation.", "Accès sécuritaire (échelle) à moins de 7,5 m du travailleur."], "suivi": "Selon travaux", "cat": "viaduc"}, {"titre": "Machinerie lourde et angles morts", "ref": "CSTC art. 2.8.5 / RSST 245", "points": ["Signaleur obligatoire pour les manœuvres de recul.", "Établir et respecter les zones d'exclusion autour de la machinerie.", "Contact visuel avec l'opérateur avant d'approcher.", "Alarme de recul et gyrophare fonctionnels.", "Aucun travailleur dans le rayon de rotation de la pelle ou de la grue."], "suivi": "Quotidien", "cat": "viaduc"}, {"titre": "Levage et grutage (poutres, sections de tablier)", "ref": "CSTC art. 2.15 / 3.10", "points": ["Plan de levage établi pour les charges critiques.", "Élingues et accessoires inspectés avant chaque levage.", "Périmètre de sécurité sous la charge — aucun travailleur sous une charge suspendue.", "Signaleur qualifié et communication radio avec le grutier.", "Vérification de la capacité de la grue selon le rayon."], "suivi": "Selon travaux", "cat": "viaduc"}, {"titre": "Travail au-dessus de l'eau", "ref": "CSTC art. 2.9 / RSST", "points": ["Veste de flottaison individuelle (VFI) obligatoire près de l'eau.", "Bouée de sauvetage et embarcation de secours disponibles.", "Plan de sauvetage nautique établi.", "Garde-corps ou filets sur les bords exposés au-dessus de l'eau."], "suivi": "Selon travaux", "cat": "viaduc"}, {"titre": "Bétonnage et coffrage", "ref": "CSTC art. 3.12", "points": ["Coffrages conçus et étayés par une personne qualifiée.", "Protection de la peau contre le béton frais (brûlures chimiques).", "Rinçage immédiat en cas de contact avec le béton.", "Vérification de la stabilité des coffrages avant la coulée."], "suivi": "Selon travaux", "cat": "viaduc"}, {"titre": "Travaux à chaud — soudure sur structure d'acier", "ref": "CSTC art. 3.4 / 2.10", "points": ["Permis de travail à chaud obligatoire.", "Écran de soudage et protection des yeux pour les travailleurs à proximité.", "Extincteur à portée de main et surveillance après les travaux.", "Ventilation adéquate contre les fumées de soudage.", "Protection contre les chutes d'étincelles vers la circulation en contrebas."], "suivi": "Selon travaux", "cat": "viaduc"}], "procedure": [{"titre": "Ouverture de la réunion et lecture de l'ordre du jour", "texte": "L'agent de prévention souhaite la bienvenue aux participants et propose l'ouverture de la réunion. Lecture de l'ordre du jour et des points varia. L'ordre du jour est adopté tel que présenté.", "action": "Agent", "suivi": "Aucun"}, {"titre": "Adoption du procès-verbal de la réunion précédente", "texte": "Le procès-verbal de la réunion précédente a été rendu disponible aux participants. Aucun commentaire ni correction n'a été soulevé. Le procès-verbal est adopté tel que présenté.", "action": "Agent", "suivi": "Aucun"}, {"titre": "Présence des participants", "texte": "Une feuille de présence est distribuée et tous les participants sont invités à signer afin de confirmer leur présence.", "action": "Tous", "suivi": "Aucun"}], "procedure_fin": [{"titre": "Suivi des accidents et incidents", "type": "oui_non", "question": "Un accident ou incident est-il survenu depuis la dernière réunion?", "texte_non": "Aucun accident ni incident depuis la dernière réunion.", "placeholder": "Décrivez l'accident/incident, les mesures prises et le suivi...", "action": "Agent", "suivi": "Aucun"}, {"titre": "Suivi des rapports et visites de la CNESST", "type": "oui_non", "question": "Une visite ou un rapport de la CNESST a-t-il eu lieu depuis la dernière réunion?", "texte_non": "Aucune visite ni rapport de la CNESST depuis la dernière réunion.", "placeholder": "Décrivez la visite, les constats, les avis de correction et le suivi...", "action": "Agent", "suivi": "Aucun"}, {"titre": "Suivi des points de la réunion précédente", "type": "texte", "texte": "Les points soulevés lors de la dernière réunion ont fait l'objet d'un suivi. Aucun point en suspens.", "action": "Agent", "suivi": "Aucun", "editable": true}, {"titre": "Pauses sécurité (toolbox)", "type": "texte", "texte": "Tous les sous-traitants doivent remettre à l'agent de sécurité leur pause sécurité au plus tard le vendredi suivant le comité. Les items discutés doivent y paraître. Pour les sous-traitants présents temporairement, la pause sécurité doit se faire le jour même.", "action": "Tous", "suivi": "", "editable": true}, {"titre": "Questions et commentaires des représentants", "type": "texte", "texte": "Les représentants ont été invités à soulever toute question ou préoccupation relative à la santé et la sécurité. Aucune question n'a été soulevée par les participants.", "action": "Tous", "suivi": "Aucun", "editable": true}, {"titre": "Varia (points divers)", "type": "varia", "texte": "", "placeholder": "Inscrivez ici tout point divers soulevé en réunion qui n'était pas prévu à l'ordre du jour (ex: demande d'un travailleur, sujet ponctuel, information à transmettre)...", "action": "", "suivi": ""}], "questions_hq": ["Est-ce qu'on connaît la façon sécuritaire de faire le travail?", "Est-ce qu'on a tout ce qu'il faut (méthode, outils, EPI, checklist)?", "Est-ce que je vais créer du risque pour moi ou pour les autres?", "Est-ce qu'on a neutralisé tous les risques avant de débuter les travaux?"], "cnesst_champs": {"ordre_jour_approuve": "Ordre du jour approuvé", "pv_adopte": "Procès-verbal adopté", "accident_incident": "Accident ou incident survenu sur le chantier", "sujets_proposes": "Sujets proposés par des membres et acceptés"}, "infractions": ["Casque de sécurité non porté — CHAQUE JOUR", "Masque P100 absent en zone silice — CHAQUE JOUR", "Escabeau mal utilisé (cheval, échelle, bord de vide)", "Rallonges électriques au sol non protégées", "Tenue des lieux déficiente — rebuts non évacués", "Bottes de sécurité non conformes", "Lunettes de sécurité non portées", "Dossard haute visibilité absent en zone de circulation", "Travail en hauteur sans protection antichute", "Zone de travail non délimitée", "Outils ou matériaux laissés dans les passages", "Non-respect des signaleurs"], "bilan_defaut": "Les observations des dernières semaines révèlent des manquements récurrents. Ces infractions mettent en danger la santé et la vie des travailleurs et causent une perte de temps. Cette pause sécurité vise à rappeler les règles fondamentales et à obtenir l'engagement de tous les travailleurs au chantier.", "politique": "Ces situations concernent l'ensemble des intervenants du chantier. Chaque travailleur, peu importe son employeur, est responsable de respecter les règles de sécurité en tout temps. Le non-respect entraîne un avertissement verbal, puis écrit, puis le retrait du chantier."};
 var N_PAGES = 5;
 var sujetSel = {};
+var infrSel = {};
 var presCount = 0;
 var sigCtx = {};
 var sigOn = {};
@@ -306,17 +316,37 @@ function genererODJ() {
     cont.appendChild(makeArticle(art++, p.titre, "<p>"+p.texte+"</p>", null, p.action, p.suivi, false));
   });
 
-  // Sujets choisis
+  // Sujets choisis — modifiables
   D.sujets.forEach(function(s, i){
     if(!sujetSel[i]) return;
-    var pts = "<ul class='article-points'>"+s.points.map(function(pt){return "<li>"+pt+"</li>";}).join("")+"</ul>";
-    cont.appendChild(makeArticle(art++, s.titre+" — "+s.ref, pts, D.pause, "Tous", s.suivi, false));
+    cont.appendChild(makeArticleSujet(art++, i, s));
   });
 
   // Articles procéduraux fin (avec types spéciaux)
   D.procedure_fin.forEach(function(p){
     cont.appendChild(makeArticleFin(art++, p));
   });
+}
+
+function makeArticleSujet(num, sujetIdx, s) {
+  var div = document.createElement("div");
+  div.className = "article-card";
+  div.id = "artsujet_"+num;
+  var pointsTxt = (s.points||[]).join("\n");
+  var h = '<div class="article-hdr"><span class="num">POINT '+(num<10?"0"+num:num)+'</span> '
+    + '<input type="text" id="stitre_'+num+'" value="'+(s.titre+" — "+s.ref).replace(/"/g,"&quot;")+'" style="flex:1;border:1px solid transparent;background:transparent;font-size:13px;font-weight:700;color:#fff;font-family:Arial;outline:none;padding:2px 4px;" onfocus="this.style.background=\'#fff\';this.style.color=\'#1a1a1a\';this.style.border=\'1px solid #999\';" onblur="this.style.background=\'transparent\';this.style.color=\'#fff\';this.style.border=\'1px solid transparent\';">';
+  h += '<button class="btn-retirer" onclick="document.getElementById(\'artsujet_'+num+'\').remove();" style="margin-left:6px;">Retirer</button>';
+  h += '</div>';
+  h += '<div class="article-body">';
+  h += '<label style="font-size:9px;font-weight:700;color:#7A3C00;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:3px;">Points (un par ligne — modifiez, ajoutez ou retirez) :</label>';
+  h += '<textarea id="spoints_'+num+'" style="width:100%;border:1px solid var(--gris-brd);padding:8px;font-size:12px;font-family:Arial;min-height:100px;resize:vertical;outline:none;line-height:1.5;">'+pointsTxt.replace(/</g,"&lt;")+'</textarea>';
+  h += '<div class="pause-txt" style="margin-top:8px;">'+D.pause+'</div>';
+  h += '<div class="article-edit">';
+  h += '<input type="text" id="act_'+num+'" placeholder="Action par" value="Tous">';
+  h += '<input type="text" id="suivi_'+num+'" placeholder="Suivi" value="'+(s.suivi||"")+'">';
+  h += '</div></div>';
+  div.innerHTML = h;
+  return div;
 }
 
 function makeArticle(num, titre, contenuHtml, pause, action, suivi, editable) {
@@ -391,48 +421,60 @@ function setOuiNon(idx, val) {
   }
 }
 
-// ── PRÉSENCES ──
-function ajouterPresence(prefill) {
-  var idx = presCount++;
-  var c = document.getElementById("presences-list");
-  var div = document.createElement("div");
-  div.className = "pres-block"; div.id = "pres_"+idx;
-  var p = prefill || {};
-  div.innerHTML =
-    '<div class="pres-row"><input type="text" id="pnom_'+idx+'" placeholder="Nom et prénom" value="'+(p.nom||"")+'"><input type="text" id="pcomp_'+idx+'" placeholder="Compagnie" value="'+(p.comp||"")+'"></div>'
-    +'<div class="pres-row"><input type="text" id="pfonc_'+idx+'" placeholder="Fonction" value="'+(p.fonc||"")+'"><input type="tel" id="ptel_'+idx+'" placeholder="Téléphone" value="'+(p.tel||"")+'"></div>'
-    +'<div style="display:flex;gap:8px;margin-top:2px;">'
-    +'<button class="btn-retirer" onclick="document.getElementById(\'pres_'+idx+'\').remove();majPres();sauverPresences();">Retirer</button>'
-    +'</div>';
-  c.appendChild(div);
-  // Sauvegarder quand on modifie un champ
-  ["pnom_","pcomp_","pfonc_","ptel_"].forEach(function(pre){
-    var el = document.getElementById(pre+idx);
-    if(el) el.addEventListener("input", sauverPresences);
-  });
-  majPres();
-}
-function majPres(){ document.getElementById("pres-cpt").innerHTML = "<strong>"+document.querySelectorAll("[id^=pres_]").length+"</strong> personne(s)"; }
-
-// Sauvegarde locale de la liste de présence (revient à la prochaine réunion)
-function sauverPresences() {
-  var get=function(id){var e=document.getElementById(id);return e?e.value:"";};
-  var liste = [];
-  document.querySelectorAll("[id^=pres_]").forEach(function(div){
-    var id = div.id.replace("pres_","");
-    var nom = get("pnom_"+id);
-    if(nom || get("pcomp_"+id)) liste.push({nom:nom, comp:get("pcomp_"+id), fonc:get("pfonc_"+id), tel:get("ptel_"+id)});
-  });
-  try{ localStorage.setItem("presences_sst", JSON.stringify(liste)); }catch(e){}
+// ── PRÉSENCES — grille imprimable (les travailleurs remplissent eux-mêmes) ──
+var nbLignesPres = 15;
+function ajusterLignes(delta) {
+  nbLignesPres = Math.max(5, Math.min(30, nbLignesPres + delta));
+  var el=document.getElementById("pres-nb"); if(el) el.textContent=nbLignesPres;
+  try{ localStorage.setItem("pres_nb_lignes", nbLignesPres); }catch(e){}
 }
 function chargerPresences() {
-  var liste=[];
-  try{ liste=JSON.parse(localStorage.getItem("presences_sst")||"[]"); }catch(e){}
-  if(liste.length){
-    liste.forEach(function(p){ ajouterPresence(p); });
-  } else {
-    ajouterPresence();
+  try{ var n=parseInt(localStorage.getItem("pres_nb_lignes")||"15"); if(n>=5) nbLignesPres=n; }catch(e){}
+  var el=document.getElementById("pres-nb"); if(el) el.textContent=nbLignesPres;
+}
+
+function imprimerPresences() {
+  var get=function(id){var e=document.getElementById(id);return e?e.value:"";};
+  var lignes="";
+  for(var i=1;i<=nbLignesPres;i++){
+    var bg = i%2===0?"background:#F8F8F8;":"";
+    lignes+="<tr style='"+bg+"'>"
+      +"<td style='border:1px solid #ccc;padding:0;width:4%;text-align:center;font-size:11px;font-weight:700;color:#888;'>"+i+"</td>"
+      +"<td style='border:1px solid #ccc;padding:0;width:28%;'><div style='min-height:34px;padding:4px 6px;font-size:13px;'>&nbsp;</div></td>"
+      +"<td style='border:1px solid #ccc;padding:0;width:23%;'><div style='min-height:34px;padding:4px 6px;font-size:13px;'>&nbsp;</div></td>"
+      +"<td style='border:1px solid #ccc;padding:0;width:18%;'><div style='min-height:34px;padding:4px 6px;font-size:13px;'>&nbsp;</div></td>"
+      +"<td style='border:1px solid #ccc;padding:0;width:14%;'><div style='min-height:34px;padding:4px 6px;font-size:13px;'>&nbsp;</div></td>"
+      +"<td style='border:1px solid #ccc;padding:0;width:13%;'><div style='min-height:34px;'>&nbsp;</div></td>"
+      +"</tr>";
   }
+  var pdfHtml="<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'><style>"
+    +"*{box-sizing:border-box;margin:0;padding:0;}"
+    +"body{font-family:Arial;font-size:12px;margin:14px;color:#1a1a1a;}"
+    +"h1{font-size:17px;text-align:center;margin:0 0 3px;border-bottom:3px solid #C8102E;padding-bottom:6px;}"
+    +".sub{font-size:10px;color:#555;text-align:center;margin:4px 0 10px;}"
+    +"table{width:100%;border-collapse:collapse;}"
+    +"th{background:#1a1a1a;color:#fff;padding:7px 6px;font-size:10px;border:1px solid #999;text-align:left;}"
+    +".infobox td{font-size:11px;padding:5px 8px;border:1px solid #ccc;}"
+    +".infobox .lbl{background:#f0f0f0;font-weight:700;width:15%;}"
+    +".decoup{border-top:2px dashed #C8102E;margin:14px 0 8px;text-align:center;font-size:10px;color:#C8102E;padding-top:4px;letter-spacing:1px;}"
+    +"@media print{@page{margin:10mm;}body{margin:0;}th{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}"
+    +"</style></head><body>"
+    +"<h1>LISTE DE PRÉSENCE — COMITÉ SST</h1>"
+    +"<div class='sub'>École primaire Sainte-Bernadette N-D-L — Mandat 26-427 — Arbour Construction</div>"
+    +"<table class='infobox' style='margin-bottom:8px;'>"
+    +"<tr><td class='lbl'>No comité</td><td style='width:15%;'>"+get("r_no")+"</td><td class='lbl'>Date</td><td style='width:20%;'>"+get("r_date")+"</td><td class='lbl'>Heure</td><td>"+get("r_heure")+"</td></tr>"
+    +"<tr><td class='lbl'>Lieu</td><td colspan='5'>"+get("r_lieu")+"</td></tr>"
+    +"</table>"
+    +"<p style='font-size:10px;font-style:italic;color:#555;margin-bottom:6px;'>Veuillez inscrire lisiblement vos informations et signer afin de confirmer votre présence à cette réunion de comité de chantier SST.</p>"
+    +"<table><tr><th style='width:4%;'>#</th><th style='width:28%;'>Nom et prénom</th><th style='width:23%;'>Compagnie / Employeur</th><th style='width:18%;'>Fonction / Métier</th><th style='width:14%;'>Téléphone</th><th style='width:13%;'>Signature</th></tr>"
+    +lignes+"</table>"
+    +"<div style='margin-top:14px;display:flex;justify-content:space-between;font-size:11px;'>"
+    +"<span>Agent de prévention : "+get("r_coss")+"</span>"
+    +"<span>Signature CoSS : ___________________________</span></div>"
+    +"<div class='decoup'>✂ — — — — — — — — — — — — — — — — — — DÉTACHER ICI — — — — — — — — — — — — — — — — — — —</div>"
+    +"<p style='font-size:9px;color:#aaa;text-align:center;'>EquipeSST — Action SST · Pierre-Pascal Ducharme · 450-803-6812 · p.ducharme@equipesst.com</p>"
+    +"</body></html>";
+  imprimerDoc(pdfHtml, "Presences_comite_"+get("r_no")+"_"+get("r_date"));
 }
 
 // ── SIGNATURE ──
@@ -456,8 +498,33 @@ function clearSig(id){var c=document.getElementById(id),ctx=sigCtx[id];if(c&&ctx
 function hasSig(id){var c=document.getElementById(id),ctx=sigCtx[id];if(!c||!ctx)return false;try{var px=ctx.getImageData(0,0,c.width,c.height).data;for(var i=3;i<px.length;i+=4){if(px[i]>0)return true;}}catch(e){}return false;}
 
 // ── RÉSUMÉ ──
+function initInfrGrid() {
+  var grid = document.getElementById("infr-grid");
+  if(!grid || grid.childElementCount > 0) return;
+  (D.infractions||[]).forEach(function(inf, i){
+    var div = document.createElement("div");
+    div.style.cssText = "display:flex;align-items:center;gap:6px;padding:5px 6px;cursor:pointer;background:#fff;border:1px solid #E5E5E5;font-size:11px;";
+    div.id = "infritem_"+i;
+    div.onclick = function(){ toggleInfr(i); };
+    div.innerHTML = "<div id='infrchk_"+i+"' style='width:16px;height:16px;border:2px solid #999;background:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;'></div><span>"+inf+"</span>";
+    grid.appendChild(div);
+  });
+}
+function toggleInfr(i) {
+  infrSel[i] = !infrSel[i];
+  var item = document.getElementById("infritem_"+i);
+  var chk = document.getElementById("infrchk_"+i);
+  if(infrSel[i]){
+    item.style.background="#FDF0EF"; item.style.borderColor="#C8102E";
+    chk.style.background="#C8102E"; chk.style.borderColor="#C8102E"; chk.textContent="X";
+  } else {
+    item.style.background="#fff"; item.style.borderColor="#E5E5E5";
+    chk.style.background="#fff"; chk.style.borderColor="#999"; chk.textContent="";
+  }
+}
 function buildResume() {
-  var npres = document.querySelectorAll("[id^=pres_]").length;
+  initInfrGrid();
+  var npres = 0;
   var nsuj = Object.keys(sujetSel).filter(function(k){return sujetSel[k];}).length;
   document.getElementById("resume").innerHTML =
     "<b>No comité :</b> "+(document.getElementById("r_no").value||"—")+"<br>"
@@ -483,73 +550,83 @@ function imprimerDoc(htmlContent, nomFichier) {
 // ── PAUSE SÉCURITÉ (TOOLBOX) ──
 function genPauseSecurite() {
   var get=function(id){var e=document.getElementById(id);return e?e.value:"";};
-  var sujets = D.sujets.filter(function(_,i){return sujetSel[i];});
+  // Lire les sujets choisis ET modifiés dans l'ordre du jour
+  var artStart = D.procedure.length + 1;
+  var sujets = [];
+  var art = artStart;
+  D.sujets.forEach(function(s, i){
+    if(!sujetSel[i]) return;
+    var titreMod = get("stitre_"+art) || (s.titre+" — "+s.ref);
+    var pointsMod = get("spoints_"+art);
+    var ptsList = pointsMod ? pointsMod.split("\n").filter(function(l){return l.trim();}) : s.points;
+    sujets.push({titre:titreMod, points:ptsList});
+    art++;
+  });
   if(sujets.length===0){ showToast("Choisissez au moins un sujet à l'étape Sujets"); return; }
 
   var sujetsHtml = sujets.map(function(s, idx){
     var pts = s.points && s.points.length
-      ? "<ul style='margin:6px 0 6px 18px;padding:0;'>"+s.points.map(function(pt){return "<li style='margin-bottom:4px;font-size:12px;line-height:1.5;'>"+pt+"</li>";}).join("")+"</ul>"
+      ? "<ul style='margin:6px 0 0 18px;padding:0;'>"+s.points.map(function(pt){return "<li style='margin-bottom:4px;font-size:12px;line-height:1.5;'>"+pt+"</li>";}).join("")+"</ul>"
       : "";
-    return "<div style='margin-bottom:14px;border:1px solid #999;page-break-inside:avoid;'>"
-      +"<div style='background:#7A3C00;color:#fff;padding:7px 10px;font-size:13px;font-weight:700;'>"+(idx+1)+". "+s.titre+"</div>"
-      +"<div style='padding:8px 10px;'>"
-      +"<div style='font-size:10px;color:#888;margin-bottom:4px;'>Référence : "+s.ref+"</div>"
-      +pts
-      +"</div></div>";
+    return "<div style='margin-bottom:12px;border:1px solid #999;page-break-inside:avoid;'>"
+      +"<div style='background:#7A3C00;color:#fff;padding:7px 10px;font-size:13px;font-weight:700;'>✅ "+s.titre+"</div>"
+      +"<div style='padding:8px 10px;'>"+pts+"</div></div>";
   }).join("");
 
-  // 4 questions Hydro-Québec
-  var qHtml = D.questions_hq.map(function(q,i){
-    return "<li style='margin-bottom:4px;font-size:11px;'>"+q+"</li>";
-  }).join("");
+  // Infractions cochées
+  var infractions = (D.infractions||[]).filter(function(_,i){return infrSel[i];});
+  var infrHtml = infractions.length
+    ? "<ul style='margin:6px 0 0 18px;padding:0;'>"+infractions.map(function(inf){return "<li style='margin-bottom:4px;font-size:12px;font-weight:600;'>"+inf+"</li>";}).join("")+"</ul>"
+    : "<p style='font-size:11px;color:#888;'>(Aucune infraction cochée)</p>";
+
+  var bilanTxt = get("pause_bilan") || D.bilan_defaut;
+  var periode = get("pause_periode") || "";
 
   // Grille de signatures travailleurs
   var sigRows = "";
-  for(var i=0;i<16;i++){
+  for(var i=0;i<18;i++){
     sigRows += "<tr><td style='border:1px solid #999;padding:9px 6px;font-size:11px;width:5%;text-align:center;'>"+(i+1)+"</td>"
-      +"<td style='border:1px solid #999;padding:9px 6px;'></td>"
       +"<td style='border:1px solid #999;padding:9px 6px;'></td>"
       +"<td style='border:1px solid #999;padding:9px 6px;'></td></tr>";
   }
 
   var html="<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'><style>"
     +"body{font-family:Arial;font-size:12px;margin:16px;color:#1a1a1a;}"
-    +".entete{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #7A3C00;padding-bottom:8px;margin-bottom:12px;}"
-    +"h1{font-size:19px;color:#7A3C00;margin:0;}"
-    +".sub{font-size:10px;color:#666;margin-top:2px;}"
-    +".org{font-size:10px;color:#7A3C00;font-weight:700;text-align:right;}"
-    +".infobox{border:1px solid #999;margin-bottom:12px;}"
+    +".entete{border-bottom:3px solid #C8102E;padding-bottom:8px;margin-bottom:12px;}"
+    +"h1{font-size:20px;color:#1a1a1a;margin:0;text-align:center;}"
+    +".sub{font-size:11px;color:#666;margin-top:2px;text-align:center;}"
+    +".infobox{border:1px solid #999;margin-bottom:12px;width:100%;border-collapse:collapse;}"
     +".infobox td{border:1px solid #ccc;padding:6px 8px;font-size:11px;}"
     +".infobox .lbl{background:#f0f0f0;font-weight:700;width:22%;}"
-    +"h2{font-size:13px;background:#7A3C00;color:#fff;padding:5px 10px;margin:14px 0 8px;}"
-    +".questions{background:#FFF4E6;border:1px solid #7A3C00;padding:10px 14px;margin-bottom:12px;}"
-    +".questions h3{font-size:12px;color:#7A3C00;margin:0 0 6px;}"
-    +".questions ol{margin:0 0 0 18px;padding:0;}"
+    +"h2{font-size:13px;background:#1a1a1a;color:#fff;padding:6px 10px;margin:14px 0 8px;}"
+    +".bilan{background:#FDF0EF;border-left:4px solid #C8102E;padding:10px 14px;margin-bottom:10px;font-size:11px;line-height:1.5;}"
+    +".politique{background:#FFF8E0;border:1px solid #C8A000;padding:10px 14px;margin-bottom:10px;font-size:11px;line-height:1.5;font-weight:600;}"
     +"table{width:100%;border-collapse:collapse;}"
     +"th{background:#1A1A1A;color:#fff;padding:6px;font-size:10px;border:1px solid #999;}"
     +".legal{font-size:9px;font-style:italic;color:#555;border:1px solid #ccc;padding:8px;margin-top:12px;line-height:1.5;}"
-    +".engage{background:#E6F0E6;border-left:4px solid #1A5C1A;padding:8px 12px;font-size:11px;margin-bottom:8px;}"
-    +"@media print{body{margin:8px;}h2{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}"
+    +".engage{background:#1a1a1a;color:#fff;padding:10px 14px;font-size:12px;font-weight:700;text-align:center;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;}"
+    +"@media print{body{margin:8px;}h2,.engage{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}"
     +"</style></head><body>"
-    +"<div class='entete'><div><h1>PAUSE SÉCURITÉ</h1><div class='sub'>Compte rendu — Document de sensibilisation SST</div></div>"
-    +"<div class='org'>EquipeSST — Action SST<br>"+get("r_coss")+"<br>450-803-6812</div></div>"
+    +"<div class='entete'><h1>PAUSE SANTÉ SÉCURITÉ</h1>"
+    +"<div class='sub'>"+get("r_chantier")+" — Joliette | Mandat no : 26-427</div></div>"
     +"<table class='infobox'>"
-    +"<tr><td class='lbl'>Chantier</td><td>"+get("r_chantier")+"</td><td class='lbl'>Date</td><td>"+get("r_date")+"</td></tr>"
-    +"<tr><td class='lbl'>Animateur</td><td>"+get("r_coss")+"</td><td class='lbl'>Heure</td><td>_______</td></tr>"
-    +"<tr><td class='lbl'>Entrepreneur / Employeur</td><td colspan='3'>_______________________________________________</td></tr>"
-    +"<tr><td class='lbl' style='color:#7A3C00;'>Tenue à la suite du comité de chantier</td><td colspan='3'>No "+get("r_no")+" du "+get("r_date")+"</td></tr>"
+    +"<tr><td class='lbl'>Date de la pause</td><td>"+get("r_date")+"</td><td class='lbl'>Chantier</td><td>"+get("r_chantier")+"</td></tr>"
+    +"<tr><td class='lbl'>Responsable</td><td>"+get("r_coss")+"</td><td class='lbl'>Sous-traitant</td><td>_______________________</td></tr>"
     +"</table>"
-    +"<div class='questions'><h3>⚠ 4 questions à toujours se poser AVANT d'amorcer un travail</h3><ol>"+qHtml+"</ol></div>"
-    +"<h2>SUJETS ABORDÉS</h2>"
+    +"<h2>BILAN DES OBSERVATIONS"+(periode?" — "+periode:"")+"</h2>"
+    +"<div class='bilan'>"+bilanTxt+"</div>"
+    +"<p style='font-size:11px;font-weight:700;margin-bottom:4px;'>Infractions les plus fréquentes :</p>"
+    +infrHtml
+    +"<div class='politique'>"+D.politique+"</div>"
+    +"<h2>SUJETS OBLIGATOIRES DE LA PAUSE SÉCURITÉ</h2>"
     +sujetsHtml
-    +"<h2>BONS COUPS ET POINTS POSITIFS</h2>"
-    +"<div style='border:1px solid #999;min-height:40px;padding:8px;font-size:11px;color:#888;'>(Souligner les bons comportements SST observés sur le chantier)</div>"
     +"<h2>QUESTIONS ET COMMENTAIRES DES TRAVAILLEURS</h2>"
-    +"<div style='border:1px solid #999;min-height:40px;padding:8px;font-size:11px;color:#888;'>(Noter les questions soulevées — toute question sans réponse sera traitée à la prochaine pause)</div>"
-    +"<h2>LISTE DE PRÉSENCE</h2>"
-    +"<div class='engage'>Par ma signature, je confirme avoir assisté à cette pause sécurité, avoir compris les sujets présentés et m'engager à les appliquer sur le chantier.</div>"
-    +"<table><tr><th style='width:5%;'>#</th><th style='width:42%;'>Nom (lettres moulées)</th><th style='width:28%;'>Entreprise</th><th style='width:25%;'>Signature</th></tr>"+sigRows+"</table>"
-    +"<div class='legal'>Cette pause sécurité fait suite au comité de chantier SST no "+get("r_no")+" du "+get("r_date")+". Conformément à l'article 51 de la LSST (RLRQ c. S-2.1), l'employeur doit informer et former ses travailleurs. Tous les sous-traitants doivent diffuser ces sujets à leurs travailleurs présents au chantier. Document conservé aux fins de conformité réglementaire.</div>"
+    +"<div style='border:1px solid #999;min-height:36px;padding:8px;font-size:11px;color:#888;'>(Noter les questions soulevées — toute question sans réponse sera traitée à la prochaine pause)</div>"
+    +"<div style='page-break-before:always;'></div>"
+    +"<div class='engage'>J'ai lu, compris et m'engage à respecter ces consignes de sécurité</div>"
+    +"<table><tr><th style='width:6%;'>#</th><th style='width:55%;'>Nom en lettres carrées (lisible)</th><th style='width:39%;'>Signature</th></tr>"+sigRows+"</table>"
+    +"<p style='margin-top:14px;font-size:11px;'>Signature du responsable SST : ___________________________________</p>"
+    +"<div class='legal'>Équipe SST — Experts en gestion de la santé et sécurité sur les chantiers de construction | Mandat 26-427. Conformément à l'article 51 de la LSST (RLRQ c. S-2.1), l'employeur doit informer et former ses travailleurs.</div>"
     +"</body></html>";
 
   // Envoyer vers Google Sheets (onglet Pauses Securite) + courriel
@@ -561,7 +638,8 @@ function genPauseSecurite() {
     chantier: get("r_chantier"),
     animateur: get("r_coss"),
     nbSujets: sujets.length,
-    sujets: titresSujets
+    sujets: titresSujets,
+    infractions: infractions.join("; ")
   }, function(){
     showToast("Pause envoyée au registre et par courriel");
   });
@@ -602,9 +680,13 @@ function genPDF() {
   });
   D.sujets.forEach(function(s,i){
     if(!sujetSel[i]) return;
-    var pts="<ul style='margin:4px 0 4px 16px;padding:0;'>"+s.points.map(function(pt){return "<li style='margin-bottom:2px;'>"+pt+"</li>";}).join("")+"</ul>";
-    var contenu="<b>"+s.titre+" ("+s.ref+")</b>"+pts+"<span style='color:#C8102E;font-style:italic;font-size:10px;'>"+D.pause+"</span>";
-    addRow(art, s.titre, contenu, get("act_"+art), get("suivi_"+art)); art++;
+    // Lire le titre et les points MODIFIÉS depuis les champs
+    var titreMod = get("stitre_"+art) || (s.titre+" — "+s.ref);
+    var pointsMod = get("spoints_"+art);
+    var ptsList = pointsMod ? pointsMod.split("\n").filter(function(l){return l.trim();}) : s.points;
+    var pts="<ul style='margin:4px 0 4px 16px;padding:0;'>"+ptsList.map(function(pt){return "<li style='margin-bottom:2px;'>"+pt+"</li>";}).join("")+"</ul>";
+    var contenu="<b>"+titreMod+"</b>"+pts+"<span style='color:#C8102E;font-style:italic;font-size:10px;'>"+D.pause+"</span>";
+    addRow(art, titreMod, contenu, get("act_"+art), get("suivi_"+art)); art++;
   });
   D.procedure_fin.forEach(function(p){
     var contenu = "<b>"+p.titre+"</b>";
@@ -700,6 +782,7 @@ document.addEventListener("DOMContentLoaded", function(){
   document.getElementById("r_prochaine").value=p.toISOString().split("T")[0];
   initSujets();
   chargerPresences();
+  // charger nb lignes présences
 });
 </script>
 </body>
