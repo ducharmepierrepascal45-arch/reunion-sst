@@ -735,14 +735,8 @@ function genPDF() {
 // ── SOUMISSION ──
 function envoyer(params, cb) {
   var url=APPS_URL+"?"+Object.keys(params).map(function(k){return encodeURIComponent(k)+"="+encodeURIComponent(String(params[k]||""));}).join("&");
-  var done = false;
-  function succes() { if(done) return; done=true; if(cb)cb(); }
-  try {
-    fetch(url,{method:"GET",mode:"no-cors"}).then(function(){succes();}).catch(function(){succes();});
-  } catch(e) {
-    var img=new Image(); img.onload=img.onerror=function(){succes();}; img.src=url;
-  }
-  setTimeout(succes, 3000);
+  var img=new Image(); img.onload=img.onerror=function(){}; img.src=url;
+  setTimeout(function(){ if(cb)cb(); },2500);
 }
 function soumettre() {
   var get=function(id){var e=document.getElementById(id);return e?e.value:"";};
