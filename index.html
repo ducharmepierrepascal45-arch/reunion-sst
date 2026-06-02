@@ -499,6 +499,30 @@ function buildResume() {
 }
 
 
+// ── IMPRESSION — ouvre la fenêtre d'impression du navigateur ──
+function imprimerDoc(htmlContent, nomFichier) {
+  // Créer un nouvel onglet avec le document
+  var w = window.open("", "_blank");
+  if (!w) {
+    // Si popup bloqué — utiliser un iframe caché
+    var fr = document.getElementById("printFrame");
+    if (!fr) {
+      fr = document.createElement("iframe");
+      fr.id = "printFrame";
+      fr.style.cssText = "position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;";
+      document.body.appendChild(fr);
+    }
+    fr.srcdoc = htmlContent;
+    setTimeout(function(){ fr.contentWindow.focus(); fr.contentWindow.print(); }, 700);
+    return;
+  }
+  w.document.write(htmlContent);
+  w.document.close();
+  // Attendre que le contenu soit chargé avant d'imprimer
+  setTimeout(function(){ w.focus(); w.print(); }, 600);
+}
+
+
 function genPauseSecurite() {
   var get=function(id){var e=document.getElementById(id);return e?e.value:"";};
   var artStart = D.procedure.length + 1;
