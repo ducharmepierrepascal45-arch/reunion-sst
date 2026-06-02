@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Comité de chantier SST — Procès-verbal</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:Arial,sans-serif;background:#EAEAEA;color:#1A1A1A;padding-bottom:40px;}
+:root{
+  --rouge:#C8102E;--rouge-d:#8B0000;--rouge-l:#FDF0EF;
+  --noir:#1A1A1A;--gris:#2C2C2C;--gris-l:#F2F2F2;--gris-brd:#999;--gris-m:#CCC;
+  --vert:#1A5C1A;--vert-l:#E6F0E6;--blanc:#FFF;--beige:#F5F1E8;
+}
+.hdr{background:#1A1A1A;border-bottom:4px solid var(--rouge);}
+.hdr-body{padding:13px 16px;}
+.hdr-body h1{font-size:15px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.5px;}
+.hdr-body p{font-size:10px;color:rgba(255,255,255,.55);margin-top:3px;}
+.steps{display:flex;background:#000;overflow-x:auto;}
+.step{display:flex;flex-direction:column;align-items:center;padding:9px 14px 7px;cursor:pointer;border-bottom:3px solid transparent;min-width:72px;color:rgba(255,255,255,.4);font-size:9px;font-weight:700;text-transform:uppercase;flex-shrink:0;}
+.step .ico{font-size:17px;margin-bottom:2px;}
+.step.active{color:#fff;border-bottom-color:var(--rouge);background:rgba(255,255,255,.06);}
+.step.done{color:#7FC8A0;border-bottom-color:#7FC8A0;}
+.prog-wrap{background:#000;padding:4px 16px 8px;}
+.prog-bar{height:3px;background:rgba(255,255,255,.15);}
+.prog-fill{height:100%;background:var(--rouge);transition:.3s;}
+.prog-txt{font-size:10px;color:rgba(255,255,255,.4);margin-top:3px;text-align:right;}
+.wrap{max-width:760px;margin:0 auto;padding:14px 12px;}
+.page{display:none;}.page.active{display:block;}
+.card{background:#fff;border:1px solid var(--gris-brd);margin-bottom:14px;}
+.card-hdr{padding:9px 14px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#fff;}
+.h-noir{background:#1A1A1A;}.h-rouge{background:var(--rouge);}.h-vert{background:var(--vert);}.h-rougeD{background:var(--rouge-d);}
+.card-body{padding:14px;}
+.field{margin-bottom:11px;}
+.field label{font-size:10px;font-weight:700;color:#1A1A1A;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px;}
+.field input,.field select,.field textarea{width:100%;border:1px solid var(--gris-brd);padding:9px 10px;font-size:14px;font-family:Arial;outline:none;background:var(--gris-l);}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--rouge);border-width:2px;background:#fff;}
+.field textarea{min-height:65px;resize:vertical;}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.note{background:#FFF8E0;border-left:4px solid #C8A000;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#5A4500;line-height:1.5;}
+/* PRÉSENCES grille */
+.pres-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;}
+.pres-block{border:1px solid var(--gris-brd);padding:10px;margin-bottom:8px;background:var(--gris-l);}
+.pres-block input{width:100%;border:1px solid var(--gris-brd);padding:7px;font-size:13px;font-family:Arial;outline:none;margin-bottom:5px;}
+.psig{border:1px solid var(--gris-brd);width:100%;height:60px;background:#FAFAFA;touch-action:none;cursor:crosshair;display:block;}
+.btn-add{width:100%;padding:10px;border:2px dashed var(--rouge);background:var(--rouge-l);color:var(--rouge);font-size:12px;font-weight:700;cursor:pointer;text-transform:uppercase;}
+/* SUJETS */
+.sujet-pick{border:1px solid var(--gris-brd);background:#fff;padding:10px 12px;margin-bottom:6px;cursor:pointer;display:flex;align-items:center;gap:10px;}
+.sujet-pick:hover{background:var(--rouge-l);}
+.sujet-pick.sel{background:var(--vert-l);border-color:var(--vert);border-width:2px;}
+.sujet-pick .chk{width:22px;height:22px;border:2px solid var(--gris-brd);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;}
+.sujet-pick.sel .chk{background:var(--vert);border-color:var(--vert);color:#fff;}
+.sujet-pick .t{font-size:13px;font-weight:600;}
+.sujet-pick .r{font-size:10px;color:#888;}
+.article-card{border:1px solid var(--gris-brd);margin-bottom:10px;background:#fff;}
+.article-hdr{background:var(--beige);padding:8px 10px;border-bottom:1px solid var(--gris-brd);}
+.article-hdr .num{font-size:10px;font-weight:700;color:var(--rouge);}
+.article-hdr .titre{font-size:13px;font-weight:700;}
+.article-body{padding:10px;}
+.article-points{font-size:12px;line-height:1.6;color:#333;margin-bottom:8px;}
+.article-points li{margin-left:18px;margin-bottom:3px;}
+.pause-txt{background:var(--rouge-l);border-left:3px solid var(--rouge);padding:8px 10px;font-size:11px;color:var(--rouge-d);line-height:1.5;font-style:italic;}
+.article-edit{display:flex;gap:6px;margin-top:8px;}
+.article-edit input{flex:1;border:1px solid var(--gris-brd);padding:6px;font-size:11px;font-family:Arial;outline:none;}
+.btn-retirer{padding:4px 10px;border:1px solid var(--rouge);background:#fff;color:var(--rouge);font-size:10px;font-weight:700;cursor:pointer;text-transform:uppercase;}
+canvas.sig{border:2px solid var(--gris-brd);width:100%;background:#FAFAFA;touch-action:none;display:block;cursor:crosshair;min-height:110px;}
+.btn-clear{background:var(--gris-l);border:1px solid var(--gris-brd);padding:6px 12px;font-size:11px;font-weight:700;color:#555;cursor:pointer;margin-top:4px;text-transform:uppercase;}
+.nav-btns{display:flex;gap:10px;margin-top:4px;}
+.btn-next{flex:1;background:#1A1A1A;color:#fff;border:none;padding:14px;font-size:14px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;}
+.btn-prev{background:var(--gris-l);color:var(--gris);border:1px solid var(--gris-brd);padding:14px 18px;font-size:14px;font-weight:700;cursor:pointer;text-transform:uppercase;}
+.btn-sub{flex:1;background:var(--vert);color:#fff;border:none;padding:14px;font-size:14px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;}
+.btn-pdf{flex:1;background:var(--rouge-d);color:#fff;border:none;padding:14px;font-size:14px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;}
+.btn-sub:disabled{background:#aaa;}
+.alerte{padding:14px;margin-bottom:14px;font-size:14px;line-height:1.5;display:none;border-left:5px solid;font-weight:600;}
+.alerte.show{display:block;}
+.al-ok{background:var(--vert-l);border-color:var(--vert);color:var(--vert);}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1A1A1A;color:#fff;padding:10px 22px;border-radius:4px;font-size:12px;font-weight:700;z-index:99;display:none;}
+.toast.show{display:block;}
+.resume-bloc{background:var(--gris-l);border:1px solid var(--gris-brd);padding:12px;font-size:12px;line-height:1.9;}
+.resume-bloc b{color:var(--rouge);}
+@media(max-width:430px){.fg2,.fg3,.pres-row{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-body">
+    <h1>📋 Comité de chantier SST — Procès-verbal</h1>
+    <p>École primaire Sainte-Bernadette · Art. 90 LSST · Règlement sur les comités de chantier</p>
+  </div>
+</div>
+
+<div class="steps">
+  <div class="step active" id="step0"><div class="ico">📋</div>Infos</div>
+  <div class="step" id="step1"><div class="ico">👥</div>Présences</div>
+  <div class="step" id="step2"><div class="ico">📚</div>Sujets</div>
+  <div class="step" id="step3"><div class="ico">📝</div>Ordre du jour</div>
+  <div class="step" id="step4"><div class="ico">✅</div>Finaliser</div>
+</div>
+<div class="prog-wrap">
+  <div class="prog-bar"><div class="prog-fill" id="prog" style="width:20%"></div></div>
+  <div class="prog-txt" id="prog-txt">Étape 1 sur 5</div>
+</div>
+
+<div class="wrap">
+<div class="alerte al-ok" id="alertOk">✅ <strong>Procès-verbal enregistré!</strong> Les données sont dans le registre SST.</div>
+
+<!-- PAGE 0 : INFOS -->
+<div class="page active" id="page0">
+  <div class="note">📋 Ce document se prépare <strong>avant</strong> la réunion. Vous choisissez les sujets de pause sécurité, le texte se génère automatiquement, et vous obtenez un procès-verbal prêt à imprimer.</div>
+  <div class="card">
+    <div class="card-hdr h-noir">📋 Informations du comité</div>
+    <div class="card-body">
+      <div class="fg2">
+        <div class="field"><label>No du comité</label><input type="text" id="r_no" placeholder="Ex: 3"></div>
+        <div class="field"><label>Date</label><input type="date" id="r_date"></div>
+      </div>
+      <div class="fg2">
+        <div class="field"><label>Heure</label><input type="time" id="r_heure"></div>
+        <div class="field"><label>Lieu</label><input type="text" id="r_lieu" value="École primaire Sainte-Bernadette"></div>
+      </div>
+      <div class="field"><label>Chantier</label><input type="text" id="r_chantier" value="École primaire Sainte-Bernadette N-D-L"></div>
+      <div class="fg2">
+        <div class="field"><label>Maître d&#39;oeuvre</label><input type="text" id="r_mo" value="Arbour Construction"></div>
+        <div class="field"><label>Agent de prévention (CoSS)</label><input type="text" id="r_coss" value="Pierre-Pascal Ducharme"></div>
+      </div>
+      <div class="field"><label>Date de la prochaine réunion (auto +14 j)</label><input type="date" id="r_prochaine"></div>
+    </div>
+  </div>
+  <div class="nav-btns"><button class="btn-next" onclick="nextPage(0)">Suivant — Présences 👥</button></div>
+</div>
+
+<!-- PAGE 1 : PRÉSENCES -->
+<div class="page" id="page1">
+  <div class="note">👥 <strong>À faire signer au début de la réunion.</strong> Nom, compagnie, fonction, téléphone et signature.</div>
+  <div class="card">
+    <div class="card-hdr h-rouge">👥 Liste de présence</div>
+    <div class="card-body">
+      <div id="presences-list"></div>
+      <button class="btn-add" onclick="ajouterPresence()">+ Ajouter une personne</button>
+    </div>
+    <div style="text-align:center;padding:8px;font-size:12px;color:#666;border-top:1px solid var(--gris-l);background:var(--gris-l);" id="pres-cpt">0 personne(s)</div>
+  </div>
+  <div class="nav-btns">
+    <button class="btn-prev" onclick="goPage(0)">← Retour</button>
+    <button class="btn-next" onclick="nextPage(1)">Suivant — Sujets 📚</button>
+  </div>
+</div>
+
+<!-- PAGE 2 : CHOIX DES SUJETS -->
+<div class="page" id="page2">
+  <div class="note">📚 Cochez les sujets de pause sécurité abordés. Chaque sujet génère automatiquement un article complet avec le texte légal.</div>
+  <div class="card">
+    <div class="card-hdr h-vert">📚 Sujets de pause sécurité</div>
+    <div class="card-body" id="sujets-pick"></div>
+  </div>
+  <div class="card">
+    <div class="card-hdr h-rougeD">✏️ Rédiger votre propre sujet</div>
+    <div class="card-body">
+      <div class="field"><label>Titre du sujet</label><input type="text" id="perso_titre" placeholder="Ex: Travaux de nuit — éclairage"></div>
+      <div class="field"><label>Référence (optionnel)</label><input type="text" id="perso_ref" placeholder="Ex: CSTC art. 3.3"></div>
+      <div class="field"><label>Points (un par ligne)</label><textarea id="perso_contenu" placeholder="Tapez chaque point sur une ligne séparée..." style="min-height:90px;"></textarea></div>
+      <button class="btn-add" onclick="ajouterSujetPerso()" style="border-color:var(--rouge-d);color:var(--rouge-d);background:var(--rouge-l);">+ Ajouter ce sujet</button>
+      <div id="perso-liste" style="margin-top:10px;"></div>
+    </div>
+  </div>
+  <div class="nav-btns">
+    <button class="btn-prev" onclick="goPage(1)">← Retour</button>
+    <button class="btn-next" onclick="nextPage(2)">Suivant — Ordre du jour 📝</button>
+  </div>
+</div>
+
+<!-- PAGE 3 : ORDRE DU JOUR GÉNÉRÉ -->
+<div class="page" id="page3">
+  <div class="note">📝 Voici le procès-verbal généré. Les articles procéduraux et vos sujets sont assemblés. Vous pouvez ajuster les champs « Action » et « Suivi ».</div>
+  <div id="odj-genere"></div>
+  <div class="nav-btns">
+    <button class="btn-prev" onclick="goPage(2)">← Retour</button>
+    <button class="btn-next" onclick="nextPage(3)">Suivant — Finaliser ✅</button>
+  </div>
+</div>
+
+<!-- PAGE 4 : FINALISER -->
+<div class="page" id="page4">
+  <div class="card">
+    <div class="card-hdr h-vert">✅ Résumé et enregistrement</div>
+    <div class="card-body">
+      <div class="resume-bloc" id="resume"></div>
+      <div class="field" style="margin-top:12px;"><label>Remarques finales</label><textarea id="r_remarques" placeholder="Observations finales du CoSS..."></textarea></div>
+      <div style="margin-top:10px;">
+        <label style="font-size:10px;font-weight:700;color:var(--rouge);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Signature de l&#39;agent de prévention</label>
+        <canvas class="sig" id="sig_coss" height="110"></canvas>
+        <button class="btn-clear" onclick="clearSig('sig_coss')">Effacer</button>
+      </div>
+    </div>
+  </div>
+  <div style="margin-bottom:10px;">
+    <button class="btn-pause" onclick="genPauseSecurite()" style="width:100%;background:#7A3C00;color:#fff;border:none;padding:14px;font-size:14px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;">🦺 Générer la pause sécurité (toolbox)</button>
+    <p style="font-size:11px;color:#666;margin-top:6px;text-align:center;line-height:1.4;">Crée le document à remettre aux travailleurs, basé sur les sujets choisis dans le comité.</p>
+  </div>
+  <div class="nav-btns">
+    <button class="btn-prev" onclick="goPage(3)">← Retour</button>
+    <button class="btn-pdf" onclick="genPDF()">📄 PV PDF</button>
+    <button class="btn-sub" id="btn-sub" onclick="soumettre()">📤 Enregistrer</button>
+  </div>
+</div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var APPS_URL = "https://script.google.com/macros/s/AKfycbxOy41mCXdxVwiPw0SU0P7dqL48xF5xBIivUNc07dAMbpmRuiu6Tn-4yOK-zt7LhhmZFg/exec";
+var D = {"pause": "Le sujet est mis en pause sécurité et tous les contremaîtres/responsables présents au comité sont avisés. Un suivi sera effectué lors de la prochaine rencontre. Aucun commentaire n'a été émis suite à l'explication du sujet.", "sujets": [{"titre": "Chute de hauteur de plus de 3 m (tolérance 0)", "ref": "CSTC art. 2.9", "points": ["Modifier la position de travail afin de ne pas être en risque de chute.", "Équipement de protection collective (garde-corps, ligne d'avertissement).", "Dernier recours : équipement de protection individuelle.", "Enrouleur-dérouleur contre les arêtes vives pour les ancrages sous l'anneau dorsal en D.", "Utilisation d'une corde d'assurance verticale avec coulisseau et longe de 32 po max de longueur (l'ancrage doit toujours être en haut de l'anneau dorsal en D).", "La corde d'assurance verticale peut être utilisée sous l'anneau dorsal en D si elle sert de système de retenue (limitation de déplacement)."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Échelle et escabeau (tolérance 0)", "ref": "CSTC art. 3.5", "points": ["L'échelle doit toujours être installée sur un sol stable.", "L'échelle doit toujours être attachée solidement à la structure pour éviter un renversement.", "L'échelle doit avoir un angle de 1 pied de recul pour 4 pieds de hauteur et dépasser de 900 mm le palier supérieur.", "Toujours avoir 3 points d'appui quand on monte dans un accès."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Signaux de danger et zone de sécurité", "ref": "CSTC art. 3.2.5", "points": ["Un périmètre doit être effectué quand des travaux en hauteur sont faits : au-dessus des entrées, au-dessus des passages piétonniers, quand des travailleurs sont susceptibles de passer sous une nacelle aérienne, une charge ou un levage de matériel.", "Aucun travail superposé."], "suivi": "Quotidien", "cat": "general"}, {"titre": "Inspection des appareils de levage", "ref": "CSTC art. 2.15.2 / 3.10.1, RSST 245.1", "points": ["Obligatoire avant la première utilisation et par écrit (formulaire disponible).", "Carte d'opérateur OBLIGATOIRE.", "Inspection quotidienne consignée au registre."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Silice cristalline (tolérance 0)", "ref": "CSTC art. 3.25", "points": ["Méthode de travail réduisant l'émission de poussière (eau, aspiration à la source).", "Protection respiratoire adaptée obligatoire.", "Délimitation de la zone de travail."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Cadenassage (LOTO)", "ref": "CSTC art. 2.20", "points": ["Toute source d'énergie doit être cadenassée avant intervention.", "Chaque travailleur appose son propre cadenas.", "Vérification de l'absence d'énergie résiduelle avant le travail."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Protection respiratoire", "ref": "CSTC art. 2.10.8", "points": ["Port de l'appareil de protection respiratoire adapté au contaminant.", "Test d'ajustement (fit test) valide.", "Entretien et entreposage adéquats des masques."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Manutention sécuritaire des charges", "ref": "RSST art. 255", "points": ["Évaluer le poids et la prise avant de soulever.", "Plier les genoux, garder le dos droit.", "Demander de l'aide ou utiliser un équipement pour les charges lourdes."], "suivi": "Quotidien", "cat": "general"}, {"titre": "Travaux à chaud", "ref": "CSTC art. 3.4 / SIMDUT", "points": ["Permis de travail à chaud obligatoire.", "Extincteur à proximité et surveillance après les travaux.", "Retrait des matières combustibles de la zone."], "suivi": "Selon travaux", "cat": "general"}, {"titre": "Excavation et tranchée", "ref": "CSTC art. 3.15", "points": ["Étançonnement obligatoire pour toute tranchée de plus de 1,2 m.", "Vérifier la stabilité du sol (CSTC 3.15.2).", "Localisation des services publics avant l'excavation."], "suivi": "Selon travaux", "cat": "general"}, {"titre": "Garde-corps", "ref": "CSTC art. 3.8", "points": ["Garde-corps supérieur entre 900 et 1070 mm.", "Lisse intermédiaire à mi-hauteur.", "Plinthe (garde-pied) de 150 mm minimum."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Protection des yeux et du visage", "ref": "CSTC art. 2.10.5", "points": ["Lunettes de sécurité obligatoires en tout temps sur le chantier.", "Écran facial pour le meulage, la découpe et les projections.", "Protection adaptée au risque de la tâche."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Casque de sécurité", "ref": "CSTC art. 2.10.3", "points": ["Port du casque obligatoire en tout temps, même en fin de chantier.", "Casque conforme et en bon état.", "Jugulaire pour les travaux en hauteur."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Bruit", "ref": "CSTC art. 2.21", "points": ["Protection auditive obligatoire dans les zones bruyantes.", "Réduire le bruit à la source quand possible.", "Affichage des zones à port obligatoire."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Produits dangereux et SIMDUT", "ref": "CSTC art. 3.16.10", "points": ["Fiches de données de sécurité disponibles sur le chantier.", "Étiquetage conforme des contenants.", "Entreposage selon les recommandations du fabricant."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Sortie de nacelle interdite", "ref": "CSTC art. 2.15.2.10", "points": ["Interdiction de sortir de la plateforme en hauteur.", "Ne jamais monter sur les garde-corps.", "Harnais attaché au point d'ancrage de la nacelle en tout temps."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Prévention du suicide en construction", "ref": "Construction en santé", "points": ["Ressources d'aide disponibles et affichées (APSAM, PAE).", "Être attentif aux signes de détresse chez les collègues.", "Briser l'isolement, oser parler."], "suivi": "En tout temps", "cat": "general"}, {"titre": "Tenue des lieux et propreté", "ref": "CSTC art. 3.2", "points": ["Maintenir les aires de travail propres et dégagées.", "Disposer les débris dans les contenants prévus.", "Dégager les voies de circulation et issues."], "suivi": "Quotidien", "cat": "general"}, {"titre": "Circulation routière à proximité (chantier de viaduc)", "ref": "CSTC art. 2.8.1 / Norme MTQ T-RV-7", "points": ["Signalisation routière conforme aux normes du MTQ (cônes, panneaux, atténuateurs d'impact).", "Port du dossard de sécurité haute visibilité de classe 2 ou 3 en tout temps.", "Signaleur de chantier positionné et formé pour diriger la circulation.", "Délimitation physique entre la zone de travail et la voie de circulation (glissières, barrières).", "Aucun travailleur ne doit tourner le dos à la circulation sans protection."], "suivi": "Quotidien", "cat": "viaduc"}, {"titre": "Chute de hauteur — travaux sur structure de viaduc", "ref": "CSTC art. 2.9 / tolérance 0", "points": ["Système d'ancrage certifié sur la structure, toujours au-dessus de l'anneau dorsal en D.", "Garde-corps ou filet de sécurité sur les bords du tablier et des poutres.", "Harnais avec absorbeur d'énergie obligatoire pour tout travail en hauteur.", "Plan de sauvetage en hauteur établi et communiqué.", "Aucun travail au-dessus de la circulation sans protection contre les chutes d'objets."], "suivi": "En tout temps", "cat": "viaduc"}, {"titre": "Poussière et silice (sciage, forage de béton)", "ref": "CSTC art. 3.25 / tolérance 0 CNESST", "points": ["Méthode humide ou aspiration à la source pour le sciage et le forage du béton.", "Protection respiratoire adaptée (demi-masque P100 minimum).", "Délimitation et signalisation de la zone de production de poussière.", "Rotation des travailleurs pour limiter l'exposition."], "suivi": "En tout temps", "cat": "viaduc"}, {"titre": "Risque biologique — excréments de pigeon (histoplasmose)", "ref": "RSST art. 3 / LSST art. 51", "points": ["Les excréments de pigeon peuvent contenir des champignons causant l'histoplasmose et la cryptococcose.", "Humidifier les déjections avant le nettoyage pour éviter la mise en suspension.", "Port d'un appareil de protection respiratoire (N95 minimum, P100 recommandé).", "Combinaison jetable, gants et lunettes étanches obligatoires.", "Décontamination des vêtements et lavage des mains après l'intervention.", "Disposer les déchets dans des sacs scellés identifiés."], "suivi": "Selon travaux", "cat": "viaduc"}, {"titre": "Excavation et tranchée (culées, fondations)", "ref": "CSTC art. 3.15", "points": ["Étançonnement obligatoire pour toute tranchée de plus de 1,2 m de profondeur.", "Vérifier la stabilité du sol et la présence d'eau (CSTC 3.15.2).", "Localisation des services publics souterrains avant toute excavation.", "Maintenir les déblais à au moins 1,2 m du bord de l'excavation.", "Accès sécuritaire (échelle) à moins de 7,5 m du travailleur."], "suivi": "Selon travaux", "cat": "viaduc"}, {"titre": "Machinerie lourde et angles morts", "ref": "CSTC art. 2.8.5 / RSST 245", "points": ["Signaleur obligatoire pour les manœuvres de recul.", "Établir et respecter les zones d'exclusion autour de la machinerie.", "Contact visuel avec l'opérateur avant d'approcher.", "Alarme de recul et gyrophare fonctionnels.", "Aucun travailleur dans le rayon de rotation de la pelle ou de la grue."], "suivi": "Quotidien", "cat": "viaduc"}, {"titre": "Levage et grutage (poutres, sections de tablier)", "ref": "CSTC art. 2.15 / 3.10", "points": ["Plan de levage établi pour les charges critiques.", "Élingues et accessoires inspectés avant chaque levage.", "Périmètre de sécurité sous la charge — aucun travailleur sous une charge suspendue.", "Signaleur qualifié et communication radio avec le grutier.", "Vérification de la capacité de la grue selon le rayon."], "suivi": "Selon travaux", "cat": "viaduc"}, {"titre": "Travail au-dessus de l'eau", "ref": "CSTC art. 2.9 / RSST", "points": ["Veste de flottaison individuelle (VFI) obligatoire près de l'eau.", "Bouée de sauvetage et embarcation de secours disponibles.", "Plan de sauvetage nautique établi.", "Garde-corps ou filets sur les bords exposés au-dessus de l'eau."], "suivi": "Selon travaux", "cat": "viaduc"}, {"titre": "Bétonnage et coffrage", "ref": "CSTC art. 3.12", "points": ["Coffrages conçus et étayés par une personne qualifiée.", "Protection de la peau contre le béton frais (brûlures chimiques).", "Rinçage immédiat en cas de contact avec le béton.", "Vérification de la stabilité des coffrages avant la coulée."], "suivi": "Selon travaux", "cat": "viaduc"}, {"titre": "Travaux à chaud — soudure sur structure d'acier", "ref": "CSTC art. 3.4 / 2.10", "points": ["Permis de travail à chaud obligatoire.", "Écran de soudage et protection des yeux pour les travailleurs à proximité.", "Extincteur à portée de main et surveillance après les travaux.", "Ventilation adéquate contre les fumées de soudage.", "Protection contre les chutes d'étincelles vers la circulation en contrebas."], "suivi": "Selon travaux", "cat": "viaduc"}], "procedure": [{"titre": "Ouverture de la réunion et lecture de l'ordre du jour", "texte": "L'agent de prévention souhaite la bienvenue aux participants et propose l'ouverture de la réunion. Lecture de l'ordre du jour et des points varia. L'ordre du jour est adopté tel que présenté.", "action": "Agent", "suivi": "Aucun"}, {"titre": "Adoption du procès-verbal de la réunion précédente", "texte": "Le procès-verbal de la réunion précédente a été rendu disponible aux participants. Aucun commentaire ni correction n'a été soulevé. Le procès-verbal est adopté tel que présenté.", "action": "Agent", "suivi": "Aucun"}, {"titre": "Présence des participants", "texte": "Une feuille de présence est distribuée et tous les participants sont invités à signer afin de confirmer leur présence.", "action": "Tous", "suivi": "Aucun"}], "procedure_fin": [{"titre": "Suivi des accidents et incidents", "type": "oui_non", "question": "Un accident ou incident est-il survenu depuis la dernière réunion?", "texte_non": "Aucun accident ni incident depuis la dernière réunion.", "placeholder": "Décrivez l'accident/incident, les mesures prises et le suivi...", "action": "Agent", "suivi": "Aucun"}, {"titre": "Suivi des rapports et visites de la CNESST", "type": "oui_non", "question": "Une visite ou un rapport de la CNESST a-t-il eu lieu depuis la dernière réunion?", "texte_non": "Aucune visite ni rapport de la CNESST depuis la dernière réunion.", "placeholder": "Décrivez la visite, les constats, les avis de correction et le suivi...", "action": "Agent", "suivi": "Aucun"}, {"titre": "Suivi des points de la réunion précédente", "type": "texte", "texte": "Les points soulevés lors de la dernière réunion ont fait l'objet d'un suivi. Aucun point en suspens.", "action": "Agent", "suivi": "Aucun", "editable": true}, {"titre": "Pauses sécurité (toolbox)", "type": "texte", "texte": "Tous les sous-traitants doivent remettre à l'agent de sécurité leur pause sécurité au plus tard le vendredi suivant le comité. Les items discutés doivent y paraître. Pour les sous-traitants présents temporairement, la pause sécurité doit se faire le jour même.", "action": "Tous", "suivi": "", "editable": true}, {"titre": "Questions et commentaires des représentants", "type": "texte", "texte": "Les représentants ont été invités à soulever toute question ou préoccupation relative à la santé et la sécurité. Aucune question n'a été soulevée par les participants.", "action": "Tous", "suivi": "Aucun", "editable": true}, {"titre": "Varia (points divers)", "type": "varia", "texte": "", "placeholder": "Inscrivez ici tout point divers soulevé en réunion qui n'était pas prévu à l'ordre du jour (ex: demande d'un travailleur, sujet ponctuel, information à transmettre)...", "action": "", "suivi": ""}], "questions_hq": ["Est-ce qu'on connaît la façon sécuritaire de faire le travail?", "Est-ce qu'on a tout ce qu'il faut (méthode, outils, EPI, checklist)?", "Est-ce que je vais créer du risque pour moi ou pour les autres?", "Est-ce qu'on a neutralisé tous les risques avant de débuter les travaux?"], "cnesst_champs": {"ordre_jour_approuve": "Ordre du jour approuvé", "pv_adopte": "Procès-verbal adopté", "accident_incident": "Accident ou incident survenu sur le chantier", "sujets_proposes": "Sujets proposés par des membres et acceptés"}};
+var N_PAGES = 5;
+var sujetSel = {};
+var presCount = 0;
+var sigCtx = {};
+var sigOn = {};
+var articleEdits = {};
+
+function goPage(n) {
+  document.querySelectorAll(".page").forEach(function(p){ p.classList.remove("active"); });
+  document.querySelectorAll(".step").forEach(function(s,i){
+    s.classList.remove("active");
+    if(i<n) s.classList.add("done"); else s.classList.remove("done");
+  });
+  document.getElementById("page"+n).classList.add("active");
+  document.getElementById("step"+n).classList.add("active");
+  document.getElementById("prog").style.width=((n+1)/N_PAGES*100)+"%";
+  document.getElementById("prog-txt").textContent="Étape "+(n+1)+" sur "+N_PAGES;
+  window.scrollTo(0,0);
+  if(n===3) genererODJ();
+  if(n===4){ buildResume(); setTimeout(function(){ initSig("sig_coss"); },150); }
+}
+function nextPage(n){
+  if(n===0 && !document.getElementById("r_date").value){ showToast("Indiquez la date"); return; }
+  goPage(n+1);
+}
+
+// ── SUJETS ──
+var customSujets = [];
+function initSujets() {
+  var c = document.getElementById("sujets-pick");
+  // Groupe général
+  var hG = document.createElement("div");
+  hG.style.cssText = "font-size:11px;font-weight:700;color:var(--vert);text-transform:uppercase;letter-spacing:1px;margin:4px 0 8px;padding-bottom:4px;border-bottom:2px solid var(--vert);";
+  hG.textContent = "Sujets généraux";
+  c.appendChild(hG);
+  D.sujets.forEach(function(s, i) {
+    if(s.cat==="viaduc") return;
+    c.appendChild(makeSujetPick(s, i));
+  });
+  // Groupe viaduc
+  var hV = document.createElement("div");
+  hV.style.cssText = "font-size:11px;font-weight:700;color:var(--rouge);text-transform:uppercase;letter-spacing:1px;margin:16px 0 8px;padding-bottom:4px;border-bottom:2px solid var(--rouge);";
+  hV.textContent = "🌉 Sujets spécifiques — Viaduc / Pont";
+  c.appendChild(hV);
+  D.sujets.forEach(function(s, i) {
+    if(s.cat!=="viaduc") return;
+    c.appendChild(makeSujetPick(s, i));
+  });
+}
+function makeSujetPick(s, i) {
+  var div = document.createElement("div");
+  div.className = "sujet-pick"; div.id = "sjp_"+i;
+  div.onclick = function(){ toggleSujet(i); };
+  div.innerHTML = '<div class="chk" id="sjchk_'+i+'"></div><div><div class="t">'+s.titre+'</div><div class="r">'+s.ref+'</div></div>';
+  return div;
+}
+function ajouterSujetPerso() {
+  var titre = document.getElementById("perso_titre").value.trim();
+  var ref = document.getElementById("perso_ref").value.trim();
+  var contenu = document.getElementById("perso_contenu").value.trim();
+  if(!titre){ showToast("Donnez un titre au sujet"); return; }
+  var points = contenu ? contenu.split("\n").filter(function(l){return l.trim();}) : [];
+  var newSujet = {titre:titre, ref:ref||"—", points:points, suivi:"En tout temps", cat:"perso"};
+  D.sujets.push(newSujet);
+  var newIdx = D.sujets.length - 1;
+  sujetSel[newIdx] = true;
+  // Afficher dans la liste
+  var c = document.getElementById("perso-liste");
+  var div = document.createElement("div");
+  div.className = "sujet-pick sel";
+  div.innerHTML = '<div class="chk" style="background:var(--vert);border-color:var(--vert);color:#fff;">✓</div><div><div class="t">'+titre+'</div><div class="r">'+(ref||"—")+'</div></div>';
+  c.appendChild(div);
+  document.getElementById("perso_titre").value="";
+  document.getElementById("perso_ref").value="";
+  document.getElementById("perso_contenu").value="";
+  showToast("Sujet ajouté!");
+}
+function toggleSujet(i) {
+  sujetSel[i] = !sujetSel[i];
+  document.getElementById("sjp_"+i).className = "sujet-pick"+(sujetSel[i]?" sel":"");
+  document.getElementById("sjchk_"+i).textContent = sujetSel[i]?"✓":"";
+}
+
+// ── GÉNÉRATION ODJ ──
+function genererODJ() {
+  var cont = document.getElementById("odj-genere");
+  cont.innerHTML = "";
+  var art = 1;
+
+  // Articles procéduraux début
+  D.procedure.forEach(function(p){
+    cont.appendChild(makeArticle(art++, p.titre, "<p>"+p.texte+"</p>", null, p.action, p.suivi, false));
+  });
+
+  // Sujets choisis
+  D.sujets.forEach(function(s, i){
+    if(!sujetSel[i]) return;
+    var pts = "<ul class='article-points'>"+s.points.map(function(pt){return "<li>"+pt+"</li>";}).join("")+"</ul>";
+    cont.appendChild(makeArticle(art++, s.titre+" — "+s.ref, pts, D.pause, "Tous", s.suivi, false));
+  });
+
+  // Articles procéduraux fin (avec types spéciaux)
+  D.procedure_fin.forEach(function(p){
+    cont.appendChild(makeArticleFin(art++, p));
+  });
+}
+
+function makeArticle(num, titre, contenuHtml, pause, action, suivi, editable) {
+  var div = document.createElement("div");
+  div.className = "article-card";
+  var idx = num;
+  var h = '<div class="article-hdr"><span class="num">POINT '+(num<10?"0"+num:num)+'</span> <span class="titre">'+titre+'</span></div>';
+  h += '<div class="article-body">';
+  h += contenuHtml;
+  if(pause) h += '<div class="pause-txt">'+pause+'</div>';
+  h += '<div class="article-edit">';
+  h += '<input type="text" id="act_'+idx+'" placeholder="Action par" value="'+(action||"")+'">';
+  h += '<input type="text" id="suivi_'+idx+'" placeholder="Suivi" value="'+(suivi||"")+'">';
+  h += '</div></div>';
+  div.innerHTML = h;
+  return div;
+}
+
+function makeArticleFin(num, p) {
+  var div = document.createElement("div");
+  div.className = "article-card";
+  var idx = num;
+  var h = '<div class="article-hdr"><span class="num">POINT '+(num<10?"0"+num:num)+'</span> <span class="titre">'+p.titre+'</span></div>';
+  h += '<div class="article-body">';
+
+  if(p.type === "oui_non") {
+    // Boutons OUI / NON
+    h += '<div style="font-size:12px;font-weight:600;margin-bottom:8px;">'+p.question+'</div>';
+    h += '<div style="display:flex;gap:8px;margin-bottom:10px;">';
+    h += '<button type="button" id="on_non_'+idx+'" onclick="setOuiNon('+idx+',\u0027non\u0027)" style="flex:1;padding:10px;border:2px solid var(--vert);background:var(--vert-l);color:var(--vert);font-size:13px;font-weight:700;cursor:pointer;">✓ NON — Rien à signaler</button>';
+    h += '<button type="button" id="on_oui_'+idx+'" onclick="setOuiNon('+idx+',\u0027oui\u0027)" style="flex:1;padding:10px;border:2px solid var(--gris-brd);background:#fff;color:#666;font-size:13px;font-weight:700;cursor:pointer;">⚠ OUI — À décrire</button>';
+    h += '</div>';
+    // Zone texte (cachée par défaut, montrée si OUI)
+    h += '<div id="on_zone_'+idx+'" style="display:none;">';
+    h += '<textarea id="txt_'+idx+'" placeholder="'+p.placeholder+'" style="width:100%;border:1px solid var(--gris-brd);padding:9px;font-size:13px;font-family:Arial;min-height:75px;resize:vertical;outline:none;"></textarea>';
+    h += '</div>';
+    // Marquer NON par défaut
+    setTimeout(function(){ setOuiNon(idx,"non"); }, 10);
+  }
+  else if(p.type === "varia") {
+    h += '<div style="font-size:11px;color:#666;font-style:italic;margin-bottom:8px;">'+p.placeholder+'</div>';
+    h += '<textarea id="txt_'+idx+'" placeholder="Aucun point varia, ou inscrivez les points divers ici..." style="width:100%;border:1px solid var(--gris-brd);padding:9px;font-size:13px;font-family:Arial;min-height:80px;resize:vertical;outline:none;"></textarea>';
+  }
+  else {
+    // texte éditable standard
+    h += '<textarea id="txt_'+idx+'" style="width:100%;border:1px solid var(--gris-brd);padding:9px;font-size:13px;font-family:Arial;min-height:60px;resize:vertical;outline:none;">'+(p.texte||"")+'</textarea>';
+  }
+
+  h += '<div class="article-edit">';
+  h += '<input type="text" id="act_'+idx+'" placeholder="Action par" value="'+(p.action||"")+'">';
+  h += '<input type="text" id="suivi_'+idx+'" placeholder="Suivi" value="'+(p.suivi||"")+'">';
+  h += '</div></div>';
+  div.innerHTML = h;
+  return div;
+}
+
+function setOuiNon(idx, val) {
+  var btnNon = document.getElementById("on_non_"+idx);
+  var btnOui = document.getElementById("on_oui_"+idx);
+  var zone = document.getElementById("on_zone_"+idx);
+  var ta = document.getElementById("txt_"+idx);
+  if(val === "non") {
+    btnNon.style.background="var(--vert-l)"; btnNon.style.borderColor="var(--vert)"; btnNon.style.color="var(--vert)";
+    btnOui.style.background="#fff"; btnOui.style.borderColor="var(--gris-brd)"; btnOui.style.color="#666";
+    zone.style.display="none";
+    if(ta) ta.dataset.repNon = "1";
+  } else {
+    btnOui.style.background="var(--rouge-l)"; btnOui.style.borderColor="var(--rouge)"; btnOui.style.color="var(--rouge)";
+    btnNon.style.background="#fff"; btnNon.style.borderColor="var(--gris-brd)"; btnNon.style.color="#666";
+    zone.style.display="block";
+    if(ta) ta.dataset.repNon = "0";
+  }
+}
+
+// ── PRÉSENCES ──
+function ajouterPresence(prefill) {
+  var idx = presCount++;
+  var c = document.getElementById("presences-list");
+  var div = document.createElement("div");
+  div.className = "pres-block"; div.id = "pres_"+idx;
+  var p = prefill || {};
+  div.innerHTML =
+    '<div class="pres-row"><input type="text" id="pnom_'+idx+'" placeholder="Nom et prénom" value="'+(p.nom||"")+'"><input type="text" id="pcomp_'+idx+'" placeholder="Compagnie" value="'+(p.comp||"")+'"></div>'
+    +'<div class="pres-row"><input type="text" id="pfonc_'+idx+'" placeholder="Fonction" value="'+(p.fonc||"")+'"><input type="tel" id="ptel_'+idx+'" placeholder="Téléphone" value="'+(p.tel||"")+'"></div>'
+    +'<div style="display:flex;gap:8px;margin-top:2px;">'
+    +'<button class="btn-retirer" onclick="document.getElementById(\'pres_'+idx+'\').remove();majPres();sauverPresences();">Retirer</button>'
+    +'</div>';
+  c.appendChild(div);
+  // Sauvegarder quand on modifie un champ
+  ["pnom_","pcomp_","pfonc_","ptel_"].forEach(function(pre){
+    var el = document.getElementById(pre+idx);
+    if(el) el.addEventListener("input", sauverPresences);
+  });
+  majPres();
+}
+function majPres(){ document.getElementById("pres-cpt").innerHTML = "<strong>"+document.querySelectorAll("[id^=pres_]").length+"</strong> personne(s)"; }
+
+// Sauvegarde locale de la liste de présence (revient à la prochaine réunion)
+function sauverPresences() {
+  var get=function(id){var e=document.getElementById(id);return e?e.value:"";};
+  var liste = [];
+  document.querySelectorAll("[id^=pres_]").forEach(function(div){
+    var id = div.id.replace("pres_","");
+    var nom = get("pnom_"+id);
+    if(nom || get("pcomp_"+id)) liste.push({nom:nom, comp:get("pcomp_"+id), fonc:get("pfonc_"+id), tel:get("ptel_"+id)});
+  });
+  try{ localStorage.setItem("presences_sst", JSON.stringify(liste)); }catch(e){}
+}
+function chargerPresences() {
+  var liste=[];
+  try{ liste=JSON.parse(localStorage.getItem("presences_sst")||"[]"); }catch(e){}
+  if(liste.length){
+    liste.forEach(function(p){ ajouterPresence(p); });
+  } else {
+    ajouterPresence();
+  }
+}
+
+// ── SIGNATURE ──
+function initSig(id) {
+  var c=document.getElementById(id); if(!c||c.dataset.init) return;
+  c.dataset.init="1";
+  var dpr=window.devicePixelRatio||1, w=c.offsetWidth||300, hgt=c.classList.contains("psig")?60:110;
+  c.width=w*dpr; c.height=hgt*dpr; c.style.height=hgt+"px";
+  var ctx=c.getContext("2d");
+  ctx.scale(dpr,dpr); ctx.strokeStyle="#1a1a1a"; ctx.lineWidth=2; ctx.lineCap="round";
+  sigCtx[id]=ctx; sigOn[id]=false;
+  function pos(e){var r=c.getBoundingClientRect(),s=e.touches?e.touches[0]:e;return{x:s.clientX-r.left,y:s.clientY-r.top};}
+  c.addEventListener("mousedown",function(e){sigOn[id]=true;var p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);e.preventDefault();});
+  c.addEventListener("mousemove",function(e){if(!sigOn[id])return;var p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke();e.preventDefault();});
+  c.addEventListener("mouseup",function(){sigOn[id]=false;});
+  c.addEventListener("touchstart",function(e){sigOn[id]=true;var p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);e.preventDefault();},{passive:false});
+  c.addEventListener("touchmove",function(e){if(!sigOn[id])return;var p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke();e.preventDefault();},{passive:false});
+  c.addEventListener("touchend",function(){sigOn[id]=false;});
+}
+function clearSig(id){var c=document.getElementById(id),ctx=sigCtx[id];if(c&&ctx)ctx.clearRect(0,0,c.width,c.height);}
+function hasSig(id){var c=document.getElementById(id),ctx=sigCtx[id];if(!c||!ctx)return false;try{var px=ctx.getImageData(0,0,c.width,c.height).data;for(var i=3;i<px.length;i+=4){if(px[i]>0)return true;}}catch(e){}return false;}
+
+// ── RÉSUMÉ ──
+function buildResume() {
+  var npres = document.querySelectorAll("[id^=pres_]").length;
+  var nsuj = Object.keys(sujetSel).filter(function(k){return sujetSel[k];}).length;
+  document.getElementById("resume").innerHTML =
+    "<b>No comité :</b> "+(document.getElementById("r_no").value||"—")+"<br>"
+    +"<b>Date :</b> "+document.getElementById("r_date").value+"<br>"
+    +"<b>Lieu :</b> "+document.getElementById("r_lieu").value+"<br>"
+    +"<b>Agent :</b> "+document.getElementById("r_coss").value+"<br>"
+    +"<b>Présences :</b> "+npres+" personne(s)<br>"
+    +"<b>Sujets de pause sécurité :</b> "+nsuj;
+}
+
+// ── IMPRESSION (fenêtre d'aperçu — choisir « Enregistrer en PDF ») ──
+function imprimerDoc(htmlContent, nomFichier) {
+  var w = window.open("", "_blank");
+  if(!w) {
+    alert("Veuillez autoriser les fenêtres popup pour ce site, puis réessayer.");
+    return;
+  }
+  w.document.write(htmlContent);
+  w.document.close();
+  setTimeout(function(){ w.focus(); w.print(); }, 700);
+}
+
+// ── PAUSE SÉCURITÉ (TOOLBOX) ──
+function genPauseSecurite() {
+  var get=function(id){var e=document.getElementById(id);return e?e.value:"";};
+  var sujets = D.sujets.filter(function(_,i){return sujetSel[i];});
+  if(sujets.length===0){ showToast("Choisissez au moins un sujet à l'étape Sujets"); return; }
+
+  var sujetsHtml = sujets.map(function(s, idx){
+    var pts = s.points && s.points.length
+      ? "<ul style='margin:6px 0 6px 18px;padding:0;'>"+s.points.map(function(pt){return "<li style='margin-bottom:4px;font-size:12px;line-height:1.5;'>"+pt+"</li>";}).join("")+"</ul>"
+      : "";
+    return "<div style='margin-bottom:14px;border:1px solid #999;page-break-inside:avoid;'>"
+      +"<div style='background:#7A3C00;color:#fff;padding:7px 10px;font-size:13px;font-weight:700;'>"+(idx+1)+". "+s.titre+"</div>"
+      +"<div style='padding:8px 10px;'>"
+      +"<div style='font-size:10px;color:#888;margin-bottom:4px;'>Référence : "+s.ref+"</div>"
+      +pts
+      +"</div></div>";
+  }).join("");
+
+  // 4 questions Hydro-Québec
+  var qHtml = D.questions_hq.map(function(q,i){
+    return "<li style='margin-bottom:4px;font-size:11px;'>"+q+"</li>";
+  }).join("");
+
+  // Grille de signatures travailleurs
+  var sigRows = "";
+  for(var i=0;i<16;i++){
+    sigRows += "<tr><td style='border:1px solid #999;padding:9px 6px;font-size:11px;width:5%;text-align:center;'>"+(i+1)+"</td>"
+      +"<td style='border:1px solid #999;padding:9px 6px;'></td>"
+      +"<td style='border:1px solid #999;padding:9px 6px;'></td>"
+      +"<td style='border:1px solid #999;padding:9px 6px;'></td></tr>";
+  }
+
+  var html="<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'><style>"
+    +"body{font-family:Arial;font-size:12px;margin:16px;color:#1a1a1a;}"
+    +".entete{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #7A3C00;padding-bottom:8px;margin-bottom:12px;}"
+    +"h1{font-size:19px;color:#7A3C00;margin:0;}"
+    +".sub{font-size:10px;color:#666;margin-top:2px;}"
+    +".org{font-size:10px;color:#7A3C00;font-weight:700;text-align:right;}"
+    +".infobox{border:1px solid #999;margin-bottom:12px;}"
+    +".infobox td{border:1px solid #ccc;padding:6px 8px;font-size:11px;}"
+    +".infobox .lbl{background:#f0f0f0;font-weight:700;width:22%;}"
+    +"h2{font-size:13px;background:#7A3C00;color:#fff;padding:5px 10px;margin:14px 0 8px;}"
+    +".questions{background:#FFF4E6;border:1px solid #7A3C00;padding:10px 14px;margin-bottom:12px;}"
+    +".questions h3{font-size:12px;color:#7A3C00;margin:0 0 6px;}"
+    +".questions ol{margin:0 0 0 18px;padding:0;}"
+    +"table{width:100%;border-collapse:collapse;}"
+    +"th{background:#1A1A1A;color:#fff;padding:6px;font-size:10px;border:1px solid #999;}"
+    +".legal{font-size:9px;font-style:italic;color:#555;border:1px solid #ccc;padding:8px;margin-top:12px;line-height:1.5;}"
+    +".engage{background:#E6F0E6;border-left:4px solid #1A5C1A;padding:8px 12px;font-size:11px;margin-bottom:8px;}"
+    +"@media print{body{margin:8px;}h2{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}"
+    +"</style></head><body>"
+    +"<div class='entete'><div><h1>PAUSE SÉCURITÉ</h1><div class='sub'>Compte rendu — Document de sensibilisation SST</div></div>"
+    +"<div class='org'>EquipeSST — Action SST<br>"+get("r_coss")+"<br>450-803-6812</div></div>"
+    +"<table class='infobox'>"
+    +"<tr><td class='lbl'>Chantier</td><td>"+get("r_chantier")+"</td><td class='lbl'>Date</td><td>"+get("r_date")+"</td></tr>"
+    +"<tr><td class='lbl'>Animateur</td><td>"+get("r_coss")+"</td><td class='lbl'>Heure</td><td>_______</td></tr>"
+    +"<tr><td class='lbl'>Entrepreneur / Employeur</td><td colspan='3'>_______________________________________________</td></tr>"
+    +"<tr><td class='lbl' style='color:#7A3C00;'>Tenue à la suite du comité de chantier</td><td colspan='3'>No "+get("r_no")+" du "+get("r_date")+"</td></tr>"
+    +"</table>"
+    +"<div class='questions'><h3>⚠ 4 questions à toujours se poser AVANT d'amorcer un travail</h3><ol>"+qHtml+"</ol></div>"
+    +"<h2>SUJETS ABORDÉS</h2>"
+    +sujetsHtml
+    +"<h2>BONS COUPS ET POINTS POSITIFS</h2>"
+    +"<div style='border:1px solid #999;min-height:40px;padding:8px;font-size:11px;color:#888;'>(Souligner les bons comportements SST observés sur le chantier)</div>"
+    +"<h2>QUESTIONS ET COMMENTAIRES DES TRAVAILLEURS</h2>"
+    +"<div style='border:1px solid #999;min-height:40px;padding:8px;font-size:11px;color:#888;'>(Noter les questions soulevées — toute question sans réponse sera traitée à la prochaine pause)</div>"
+    +"<h2>LISTE DE PRÉSENCE</h2>"
+    +"<div class='engage'>Par ma signature, je confirme avoir assisté à cette pause sécurité, avoir compris les sujets présentés et m'engager à les appliquer sur le chantier.</div>"
+    +"<table><tr><th style='width:5%;'>#</th><th style='width:42%;'>Nom (lettres moulées)</th><th style='width:28%;'>Entreprise</th><th style='width:25%;'>Signature</th></tr>"+sigRows+"</table>"
+    +"<div class='legal'>Cette pause sécurité fait suite au comité de chantier SST no "+get("r_no")+" du "+get("r_date")+". Conformément à l'article 51 de la LSST (RLRQ c. S-2.1), l'employeur doit informer et former ses travailleurs. Tous les sous-traitants doivent diffuser ces sujets à leurs travailleurs présents au chantier. Document conservé aux fins de conformité réglementaire.</div>"
+    +"</body></html>";
+
+  // Envoyer vers Google Sheets (onglet Pauses Securite) + courriel
+  var titresSujets = sujets.map(function(s){return s.titre;}).join("; ");
+  envoyer({
+    type: "pause",
+    date: get("r_date"),
+    noComite: get("r_no"),
+    chantier: get("r_chantier"),
+    animateur: get("r_coss"),
+    nbSujets: sujets.length,
+    sujets: titresSujets
+  }, function(){
+    showToast("Pause envoyée au registre et par courriel");
+  });
+
+  imprimerDoc(html, "Pause_securite_"+(get("r_date")||""));
+}
+
+// ── PDF ──
+function genPDF() {
+  var get=function(id){var e=document.getElementById(id);return e?e.value:"";};
+
+  // Présences
+  var presRows="";
+  document.querySelectorAll("[id^=pres_]").forEach(function(div){
+    var id=div.id.replace("pres_","");
+    var nom=get("pnom_"+id);
+    if(!nom) return;
+    presRows+="<tr><td style='border:1px solid #999;padding:4px 6px;font-size:10px;'>"+nom+"</td>"
+      +"<td style='border:1px solid #999;padding:4px 6px;font-size:10px;'>"+get("pcomp_"+id)+"</td>"
+      +"<td style='border:1px solid #999;padding:4px 6px;font-size:10px;'>"+get("pfonc_"+id)+"</td>"
+      +"<td style='border:1px solid #999;padding:4px 6px;font-size:10px;'>"+get("ptel_"+id)+"</td>"
+      +"<td style='border:1px solid #999;padding:10px 6px;'></td></tr>";
+  });
+  // compléter avec lignes vides
+  for(var k=0;k<3;k++){ presRows+="<tr><td style='border:1px solid #999;padding:8px;'></td><td style='border:1px solid #999;'></td><td style='border:1px solid #999;'></td><td style='border:1px solid #999;'></td><td style='border:1px solid #999;'></td></tr>"; }
+
+  // Articles
+  var art=1, artRows="";
+  function addRow(num, titre, contenu, action, suivi){
+    artRows+="<tr>"
+      +"<td style='border:1px solid #999;padding:5px;text-align:center;font-size:10px;font-weight:700;width:30px;'>"+(num<10?"0"+num:num)+"</td>"
+      +"<td style='border:1px solid #999;padding:6px 8px;font-size:11px;'>"+contenu+"</td>"
+      +"<td style='border:1px solid #999;padding:5px;font-size:10px;text-align:center;width:60px;'>"+(action||"")+"</td>"
+      +"<td style='border:1px solid #999;padding:5px;font-size:10px;text-align:center;width:60px;'>"+(suivi||"")+"</td></tr>";
+  }
+  D.procedure.forEach(function(p){
+    addRow(art, p.titre, "<b>"+p.titre+"</b><br>"+p.texte, get("act_"+art), get("suivi_"+art)); art++;
+  });
+  D.sujets.forEach(function(s,i){
+    if(!sujetSel[i]) return;
+    var pts="<ul style='margin:4px 0 4px 16px;padding:0;'>"+s.points.map(function(pt){return "<li style='margin-bottom:2px;'>"+pt+"</li>";}).join("")+"</ul>";
+    var contenu="<b>"+s.titre+" ("+s.ref+")</b>"+pts+"<span style='color:#C8102E;font-style:italic;font-size:10px;'>"+D.pause+"</span>";
+    addRow(art, s.titre, contenu, get("act_"+art), get("suivi_"+art)); art++;
+  });
+  D.procedure_fin.forEach(function(p){
+    var contenu = "<b>"+p.titre+"</b>";
+    var txt = get("txt_"+art);
+    if(p.type === "oui_non") {
+      var ta = document.getElementById("txt_"+art);
+      var repNon = ta && ta.dataset.repNon === "1";
+      contenu += "<br>" + (repNon || !txt ? p.texte_non : txt);
+    } else if(p.type === "varia") {
+      contenu += "<br>" + (txt || "Aucun point varia.");
+    } else {
+      contenu += "<br>" + (txt || p.texte || "");
+    }
+    addRow(art, p.titre, contenu, get("act_"+art), get("suivi_"+art)); art++;
+  });
+
+  var html="<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'><style>"
+    +"body{font-family:Arial;font-size:12px;margin:16px;color:#1a1a1a;}"
+    +"h1{font-size:16px;text-align:center;margin-bottom:4px;}"
+    +".sub{font-size:10px;color:#666;text-align:center;margin-bottom:12px;}"
+    +"table{width:100%;border-collapse:collapse;margin-bottom:10px;}"
+    +"th{background:#1A1A1A;color:#fff;padding:5px;font-size:10px;border:1px solid #999;}"
+    +".info{font-size:11px;margin:2px 0;}"
+    +".info b{display:inline-block;min-width:90px;}"
+    +".legal{font-size:9px;font-style:italic;color:#555;border:1px solid #ccc;padding:6px;margin:8px 0;}"
+    +"@media print{body{margin:8px;}}"
+    +"</style></head><body>"
+    +"<h1>Comité de chantier SST — No "+get("r_no")+"</h1>"
+    +"<div class='sub'>Procès-verbal · Art. 90 LSST · Règlement sur les comités de chantier</div>"
+    +"<div class='info'><b>Date :</b> "+get("r_date")+" &nbsp;&nbsp; <b>Heure :</b> "+get("r_heure")+"</div>"
+    +"<div class='info'><b>Lieu :</b> "+get("r_lieu")+"</div>"
+    +"<div class='info'><b>Maître d&#39;oeuvre :</b> "+get("r_mo")+" &nbsp;&nbsp; <b>Agent :</b> "+get("r_coss")+"</div>"
+    +"<h3 style='font-size:12px;margin:10px 0 4px;'>Présences</h3>"
+    +"<table><tr><th>Nom</th><th>Compagnie</th><th>Fonction</th><th>Téléphone</th><th>Signature</th></tr>"+presRows+"</table>"
+    +"<div class='legal'>Le présent compte rendu est un résumé fidèle des discussions et des décisions prises lors de la réunion de chantier ci-haut mentionnée. Tout commentaire ou correction devra être fait dans les 4 jours suivant sa réception, sinon il sera réputé juste et accepté.</div>"
+    +"<h3 style='font-size:12px;margin:10px 0 4px;'>Ordre du jour</h3>"
+    +"<table><tr><th style='width:30px;'>Art.</th><th>Description</th><th style='width:60px;'>Action par</th><th style='width:60px;'>Suivi</th></tr>"+artRows+"</table>"
+    +"<div class='legal'>Veuillez prendre note que si des modifications doivent être apportées à ce document, vous devrez aviser le responsable par écrit dans un délai de 24 heures de la date de transmission, faute de quoi le présent document deviendra officiel et liera les parties.</div>"
+    +"<p style='font-size:11px;margin-top:10px;'><b>Remarques :</b> "+get("r_remarques")+"</p>"
+    +"<p style='font-size:11px;margin-top:14px;'>Compte rendu rédigé par : "+get("r_coss")+"</p>"
+    +"<p style='font-size:11px;font-weight:700;'>Prochaine réunion : "+get("r_prochaine")+"</p>"
+    +"</body></html>";
+  imprimerDoc(html, "Proces_verbal_comite_"+(get("r_no")||"")+"_"+(get("r_date")||""));
+}
+
+// ── SOUMISSION ──
+function envoyer(params, cb) {
+  var url=APPS_URL+"?"+Object.keys(params).map(function(k){return encodeURIComponent(k)+"="+encodeURIComponent(String(params[k]||""));}).join("&");
+  var img=new Image(); img.onload=img.onerror=function(){}; img.src=url;
+  try{ fetch(url,{method:"GET",mode:"no-cors"}).catch(function(){}); }catch(e){}
+  setTimeout(function(){ if(cb)cb(); },2000);
+}
+function soumettre() {
+  var get=function(id){var e=document.getElementById(id);return e?e.value:"";};
+  var sujets = D.sujets.filter(function(_,i){return sujetSel[i];}).map(function(s){return s.titre;});
+  var presList=[];
+  document.querySelectorAll("[id^=pres_]").forEach(function(div){
+    var id=div.id.replace("pres_","");
+    var nom=get("pnom_"+id);
+    if(nom) presList.push(nom+" ("+get("pcomp_"+id)+") "+get("pfonc_"+id)+" tel:"+get("ptel_"+id));
+  });
+  var btn=document.getElementById("btn-sub");
+  btn.disabled=true; btn.textContent="⏳ Enregistrement...";
+  envoyer({
+    type:"reunion",
+    noReunion:get("r_no"), date:get("r_date"),
+    heureDebut:get("r_heure"), heureFin:"",
+    typeReunion:"Comité de chantier",
+    chantier:get("r_chantier"), maitreDoeuvre:get("r_mo"),
+    cossAnimateur:get("r_coss"), lieu:get("r_lieu"),
+    prochaineReunion:get("r_prochaine"),
+    pointsODJTraites:sujets.length+" sujets de pause sécurité",
+    notesODJ:sujets.join("; "),
+    presences:presList.join(" | "),
+    nbPresences:presList.length,
+    remarquesFinales:get("r_remarques"),
+    signatureCoSS:hasSig("sig_coss")?"Signe":"Non signe"
+  }, function(){
+    btn.disabled=false; btn.textContent="✅ Enregistré avec succès!";
+    document.getElementById("alertOk").classList.add("show");
+    window.scrollTo(0,0);
+    setTimeout(function(){ btn.textContent="📤 Enregistrer"; },5000);
+  });
+}
+
+function showToast(m){var t=document.getElementById("toast");t.textContent=m;t.classList.add("show");setTimeout(function(){t.classList.remove("show");},3000);}
+
+document.addEventListener("DOMContentLoaded", function(){
+  var now=new Date();
+  document.getElementById("r_date").value=now.toISOString().split("T")[0];
+  document.getElementById("r_heure").value="10:00";
+  var p=new Date(now); p.setDate(p.getDate()+14);
+  document.getElementById("r_prochaine").value=p.toISOString().split("T")[0];
+  initSujets();
+  chargerPresences();
+});
+</script>
+</body>
+</html>
