@@ -118,12 +118,12 @@ canvas.sig{border:2px solid var(--gris-brd);width:100%;background:#FAFAFA;touch-
       </div>
       <div class="fg2">
         <div class="field"><label>Heure</label><input type="time" id="r_heure"></div>
-        <div class="field"><label>Lieu</label><input type="text" id="r_lieu" value="École primaire Sainte-Bernadette"></div>
+        <div class="field"><label>Lieu</label><input type="text" id="r_lieu" placeholder="Ex: Roulotte du surintendant"></div>
       </div>
-      <div class="field"><label>Chantier</label><input type="text" id="r_chantier" value="École primaire Sainte-Bernadette N-D-L"></div>
+      <div class="field"><label>Nom du chantier</label><input type="text" id="r_chantier" placeholder="Ex: École primaire Sainte-Bernadette"></div>
       <div class="fg2">
-        <div class="field"><label>Maître d&#39;oeuvre</label><input type="text" id="r_mo" value="Arbour Construction"></div>
-        <div class="field"><label>Agent de prévention (CoSS)</label><input type="text" id="r_coss" value="Pierre-Pascal Ducharme"></div>
+        <div class="field"><label>Maître d&#39;oeuvre</label><input type="text" id="r_mo" placeholder="Ex: Arbour Construction"></div>
+        <div class="field"><label>Agent de prévention (CoSS)</label><input type="text" id="r_coss" placeholder="Votre nom"></div>
       </div>
       <div class="field"><label>Date de la prochaine réunion (auto +14 j)</label><input type="date" id="r_prochaine"></div>
     </div>
@@ -133,14 +133,23 @@ canvas.sig{border:2px solid var(--gris-brd);width:100%;background:#FAFAFA;touch-
 
 <!-- PAGE 1 : PRÉSENCES -->
 <div class="page" id="page1">
-  <div class="note">👥 <strong>À faire signer au début de la réunion.</strong> Nom, compagnie, fonction, téléphone et signature.</div>
+  <div class="note" style="border-color:#C8102E;background:#FDF0EF;color:#8B0000;">
+    👥 Imprimez la feuille de présence — les travailleurs la remplissent eux-mêmes au début de la réunion.
+  </div>
   <div class="card">
-    <div class="card-hdr h-rouge">👥 Liste de présence</div>
+    <div class="card-hdr h-rouge">👥 Feuille de présence</div>
     <div class="card-body">
-      <div id="presences-list"></div>
-      <button class="btn-add" onclick="ajouterPresence()">+ Ajouter une personne</button>
+      <p style="font-size:12px;color:#555;margin-bottom:12px;">Colonnes : Nom · Compagnie · Fonction · Téléphone · Courriel</p>
+      <div class="field">
+        <label>Nombre de lignes</label>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:4px;">
+          <button onclick="ajusterLignes(-1)" style="width:38px;height:38px;border:2px solid var(--gris-brd);background:var(--gris-l);font-size:20px;font-weight:700;cursor:pointer;">−</button>
+          <span id="pres-nb" style="font-size:22px;font-weight:700;min-width:30px;text-align:center;">15</span>
+          <button onclick="ajusterLignes(1)" style="width:38px;height:38px;border:2px solid var(--gris-brd);background:var(--gris-l);font-size:20px;font-weight:700;cursor:pointer;">+</button>
+        </div>
+      </div>
+      <button onclick="imprimerPresences()" style="width:100%;padding:14px;background:var(--rouge);color:#fff;border:none;font-size:14px;font-weight:700;cursor:pointer;text-transform:uppercase;margin-top:8px;">🖨 Imprimer la feuille de présence</button>
     </div>
-    <div style="text-align:center;padding:8px;font-size:12px;color:#666;border-top:1px solid var(--gris-l);background:var(--gris-l);" id="pres-cpt">0 personne(s)</div>
   </div>
   <div class="nav-btns">
     <button class="btn-prev" onclick="goPage(0)">← Retour</button>
@@ -241,7 +250,7 @@ function goPage(n) {
   document.getElementById("prog-txt").textContent="Étape "+(n+1)+" sur "+N_PAGES;
   window.scrollTo(0,0);
   if(n===3) genererODJ();
-  if(n===4){ buildResume(); setTimeout(function(){ initSig("sig_coss"); },150); }
+  if(n===4){ buildResume(); setTimeout(function(){ initSig("sig_coss"); },200); }
 }
 function nextPage(n){
   if(n===0 && !document.getElementById("r_date").value){ showToast("Indiquez la date"); return; }
@@ -433,303 +442,266 @@ function chargerPresences() {
   var el=document.getElementById("pres-nb"); if(el) el.textContent=nbLignesPres;
 }
 
-function imprimerPresences() {
-  var get=function(id){var e=document.getElementById(id);return e?e.value:"";};
-  var lignes="";
-  for(var i=1;i<=nbLignesPres;i++){
-    var bg = i%2===0?"background:#F8F8F8;":"";
-    lignes+="<tr style='"+bg+"'>"
-      +"<td style='border:1px solid #ccc;padding:0;width:4%;text-align:center;font-size:11px;font-weight:700;color:#888;'>"+i+"</td>"
-      +"<td style='border:1px solid #ccc;padding:0;width:28%;'><div style='min-height:34px;padding:4px 6px;font-size:13px;'>&nbsp;</div></td>"
-      +"<td style='border:1px solid #ccc;padding:0;width:23%;'><div style='min-height:34px;padding:4px 6px;font-size:13px;'>&nbsp;</div></td>"
-      +"<td style='border:1px solid #ccc;padding:0;width:18%;'><div style='min-height:34px;padding:4px 6px;font-size:13px;'>&nbsp;</div></td>"
-      +"<td style='border:1px solid #ccc;padding:0;width:14%;'><div style='min-height:34px;padding:4px 6px;font-size:13px;'>&nbsp;</div></td>"
-      +"<td style='border:1px solid #ccc;padding:0;width:13%;'><div style='min-height:34px;'>&nbsp;</div></td>"
-      +"</tr>";
-  }
-  var pdfHtml="<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'><style>"
-    +"*{box-sizing:border-box;margin:0;padding:0;}"
-    +"body{font-family:Arial;font-size:12px;margin:14px;color:#1a1a1a;}"
-    +"h1{font-size:17px;text-align:center;margin:0 0 3px;border-bottom:3px solid #C8102E;padding-bottom:6px;}"
-    +".sub{font-size:10px;color:#555;text-align:center;margin:4px 0 10px;}"
-    +"table{width:100%;border-collapse:collapse;}"
-    +"th{background:#1a1a1a;color:#fff;padding:7px 6px;font-size:10px;border:1px solid #999;text-align:left;}"
-    +".infobox td{font-size:11px;padding:5px 8px;border:1px solid #ccc;}"
-    +".infobox .lbl{background:#f0f0f0;font-weight:700;width:15%;}"
-    +".decoup{border-top:2px dashed #C8102E;margin:14px 0 8px;text-align:center;font-size:10px;color:#C8102E;padding-top:4px;letter-spacing:1px;}"
-    +"@media print{@page{margin:10mm;}body{margin:0;}th{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}"
-    +"</style></head><body>"
-    +"<h1>LISTE DE PRÉSENCE — COMITÉ SST</h1>"
-    +"<div class='sub'>École primaire Sainte-Bernadette N-D-L — Mandat 26-427 — Arbour Construction</div>"
-    +"<table class='infobox' style='margin-bottom:8px;'>"
-    +"<tr><td class='lbl'>No comité</td><td style='width:15%;'>"+get("r_no")+"</td><td class='lbl'>Date</td><td style='width:20%;'>"+get("r_date")+"</td><td class='lbl'>Heure</td><td>"+get("r_heure")+"</td></tr>"
-    +"<tr><td class='lbl'>Lieu</td><td colspan='5'>"+get("r_lieu")+"</td></tr>"
-    +"</table>"
-    +"<p style='font-size:10px;font-style:italic;color:#555;margin-bottom:6px;'>Veuillez inscrire lisiblement vos informations et signer afin de confirmer votre présence à cette réunion de comité de chantier SST.</p>"
-    +"<table><tr><th style='width:4%;'>#</th><th style='width:28%;'>Nom et prénom</th><th style='width:23%;'>Compagnie / Employeur</th><th style='width:18%;'>Fonction / Métier</th><th style='width:14%;'>Téléphone</th><th style='width:13%;'>Signature</th></tr>"
-    +lignes+"</table>"
-    +"<div style='margin-top:14px;display:flex;justify-content:space-between;font-size:11px;'>"
-    +"<span>Agent de prévention : "+get("r_coss")+"</span>"
-    +"<span>Signature CoSS : ___________________________</span></div>"
-    +"<div class='decoup'>✂ — — — — — — — — — — — — — — — — — — DÉTACHER ICI — — — — — — — — — — — — — — — — — — —</div>"
-    +"<p style='font-size:9px;color:#aaa;text-align:center;'>EquipeSST — Action SST · Pierre-Pascal Ducharme · 450-803-6812 · p.ducharme@equipesst.com</p>"
-    +"</body></html>";
-  imprimerDoc(pdfHtml, "Presences_comite_"+get("r_no")+"_"+get("r_date"));
-}
-
 // ── SIGNATURE ──
-function initSig(id) {
-  var c=document.getElementById(id); if(!c||c.dataset.init) return;
-  c.dataset.init="1";
-  var dpr=window.devicePixelRatio||1, w=c.offsetWidth||300, hgt=c.classList.contains("psig")?60:110;
-  c.width=w*dpr; c.height=hgt*dpr; c.style.height=hgt+"px";
-  var ctx=c.getContext("2d");
-  ctx.scale(dpr,dpr); ctx.strokeStyle="#1a1a1a"; ctx.lineWidth=2; ctx.lineCap="round";
+var sigCtx={}, sigOn={};
+function initSig(id){
+  var cv=document.getElementById(id); if(!cv||cv.dataset.init) return;
+  cv.dataset.init="1";
+  var dpr=window.devicePixelRatio||1, w=cv.offsetWidth||300, hgt=parseInt(cv.getAttribute("height")||110);
+  cv.width=w*dpr; cv.height=hgt*dpr; cv.style.height=hgt+"px";
+  var ctx=cv.getContext("2d");
+  ctx.scale(dpr,dpr); ctx.strokeStyle="#1a1a1a"; ctx.lineWidth=2; ctx.lineCap="round"; ctx.lineJoin="round";
   sigCtx[id]=ctx; sigOn[id]=false;
-  function pos(e){var r=c.getBoundingClientRect(),s=e.touches?e.touches[0]:e;return{x:s.clientX-r.left,y:s.clientY-r.top};}
-  c.addEventListener("mousedown",function(e){sigOn[id]=true;var p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);e.preventDefault();});
-  c.addEventListener("mousemove",function(e){if(!sigOn[id])return;var p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke();e.preventDefault();});
-  c.addEventListener("mouseup",function(){sigOn[id]=false;});
-  c.addEventListener("touchstart",function(e){sigOn[id]=true;var p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);e.preventDefault();},{passive:false});
-  c.addEventListener("touchmove",function(e){if(!sigOn[id])return;var p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke();e.preventDefault();},{passive:false});
-  c.addEventListener("touchend",function(){sigOn[id]=false;});
+  function pos(e){var r=cv.getBoundingClientRect(),s=e.touches?e.touches[0]:e;return{x:s.clientX-r.left,y:s.clientY-r.top};}
+  cv.addEventListener("mousedown",function(e){sigOn[id]=true;var p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);e.preventDefault();});
+  cv.addEventListener("mousemove",function(e){if(!sigOn[id])return;var p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke();e.preventDefault();});
+  cv.addEventListener("mouseup",function(){sigOn[id]=false;});
+  cv.addEventListener("touchstart",function(e){sigOn[id]=true;var p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);e.preventDefault();},{passive:false});
+  cv.addEventListener("touchmove",function(e){if(!sigOn[id])return;var p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke();e.preventDefault();},{passive:false});
+  cv.addEventListener("touchend",function(){sigOn[id]=false;});
 }
-function clearSig(id){var c=document.getElementById(id),ctx=sigCtx[id];if(c&&ctx)ctx.clearRect(0,0,c.width,c.height);}
-function hasSig(id){var c=document.getElementById(id),ctx=sigCtx[id];if(!c||!ctx)return false;try{var px=ctx.getImageData(0,0,c.width,c.height).data;for(var i=3;i<px.length;i+=4){if(px[i]>0)return true;}}catch(e){}return false;}
+function clearSig(id){var cv=document.getElementById(id),ctx=sigCtx[id];if(cv&&ctx)ctx.clearRect(0,0,cv.width,cv.height);}
+function hasSig(id){var cv=document.getElementById(id),ctx=sigCtx[id];if(!cv||!ctx)return false;try{var px=ctx.getImageData(0,0,cv.width,cv.height).data;for(var i=3;i<px.length;i+=4){if(px[i]>0)return true;}}catch(e){}return false;}
 
-// ── RÉSUMÉ ──
+
+// ── INFRACTIONS ──
 function initInfrGrid() {
-  var grid = document.getElementById("infr-grid");
-  if(!grid || grid.childElementCount > 0) return;
-  (D.infractions||[]).forEach(function(inf, i){
-    var div = document.createElement("div");
-    div.style.cssText = "display:flex;align-items:center;gap:6px;padding:5px 6px;cursor:pointer;background:#fff;border:1px solid #E5E5E5;font-size:11px;";
-    div.id = "infritem_"+i;
-    div.onclick = function(){ toggleInfr(i); };
-    div.innerHTML = "<div id='infrchk_"+i+"' style='width:16px;height:16px;border:2px solid #999;background:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;'></div><span>"+inf+"</span>";
+  var grid=document.getElementById("infr-grid");
+  if(!grid||grid.childElementCount>0) return;
+  (D.infractions||[]).forEach(function(inf,i){
+    var div=document.createElement("div");
+    div.style.cssText="display:flex;align-items:center;gap:6px;padding:5px 6px;cursor:pointer;background:#fff;border:1px solid #E5E5E5;font-size:11px;";
+    div.id="infritem_"+i; div.onclick=function(){toggleInfr(i);};
+    div.innerHTML="<div id='infrchk_"+i+"' style='width:16px;height:16px;border:2px solid #999;background:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;'></div><span>"+inf+"</span>";
     grid.appendChild(div);
   });
 }
 function toggleInfr(i) {
-  infrSel[i] = !infrSel[i];
-  var item = document.getElementById("infritem_"+i);
-  var chk = document.getElementById("infrchk_"+i);
-  if(infrSel[i]){
-    item.style.background="#FDF0EF"; item.style.borderColor="#C8102E";
-    chk.style.background="#C8102E"; chk.style.borderColor="#C8102E"; chk.textContent="X";
-  } else {
-    item.style.background="#fff"; item.style.borderColor="#E5E5E5";
-    chk.style.background="#fff"; chk.style.borderColor="#999"; chk.textContent="";
-  }
+  infrSel[i]=!infrSel[i];
+  var item=document.getElementById("infritem_"+i);
+  var chk=document.getElementById("infrchk_"+i);
+  if(infrSel[i]){item.style.background="#FDF0EF";item.style.borderColor="#C8102E";chk.style.background="#C8102E";chk.style.borderColor="#C8102E";chk.textContent="X";}
+  else{item.style.background="#fff";item.style.borderColor="#E5E5E5";chk.style.background="#fff";chk.style.borderColor="#999";chk.textContent="";}
 }
+
+// ── RÉSUMÉ PAGE FINALISER ──
 function buildResume() {
   initInfrGrid();
-  var npres = 0;
-  var nsuj = Object.keys(sujetSel).filter(function(k){return sujetSel[k];}).length;
-  document.getElementById("resume").innerHTML =
-    "<b>No comité :</b> "+(document.getElementById("r_no").value||"—")+"<br>"
-    +"<b>Date :</b> "+document.getElementById("r_date").value+"<br>"
-    +"<b>Lieu :</b> "+document.getElementById("r_lieu").value+"<br>"
-    +"<b>Agent :</b> "+document.getElementById("r_coss").value+"<br>"
-    +"<b>Présences :</b> "+npres+" personne(s)<br>"
-    +"<b>Sujets de pause sécurité :</b> "+nsuj;
+  var nsuj=Object.keys(sujetSel).filter(function(k){return sujetSel[k];}).length;
+  var el=document.getElementById("resume");
+  if(!el) return;
+  var get=function(id){var e=document.getElementById(id);return e?e.value:"";};
+  el.innerHTML="<b>No comité :</b> "+get("r_no")+"<br>"
+    +"<b>Date :</b> "+get("r_date")+"<br>"
+    +"<b>Chantier :</b> "+get("r_chantier")+"<br>"
+    +"<b>CoSS :</b> "+get("r_coss")+"<br>"
+    +"<b>Sujets choisis :</b> "+nsuj;
 }
 
-// ── IMPRESSION (fenêtre d'aperçu — choisir « Enregistrer en PDF ») ──
-function imprimerDoc(htmlContent, nomFichier) {
-  var w = window.open("", "_blank");
-  if(!w) {
-    alert("Veuillez autoriser les fenêtres popup pour ce site, puis réessayer.");
-    return;
-  }
-  w.document.write(htmlContent);
-  w.document.close();
-  setTimeout(function(){ w.focus(); w.print(); }, 700);
-}
 
-// ── PAUSE SÉCURITÉ (TOOLBOX) ──
 function genPauseSecurite() {
   var get=function(id){var e=document.getElementById(id);return e?e.value:"";};
-  // Lire les sujets choisis ET modifiés dans l'ordre du jour
   var artStart = D.procedure.length + 1;
   var sujets = [];
   var art = artStart;
-  D.sujets.forEach(function(s, i){
+  D.sujets.forEach(function(s,i){
     if(!sujetSel[i]) return;
-    var titreMod = get("stitre_"+art) || (s.titre+" — "+s.ref);
-    var pointsMod = get("spoints_"+art);
-    var ptsList = pointsMod ? pointsMod.split("\n").filter(function(l){return l.trim();}) : s.points;
+    var titreMod=get("stitre_"+art)||(s.titre);
+    var pointsMod=get("spoints_"+art);
+    var ptsList=pointsMod?pointsMod.split("\n").filter(function(l){return l.trim();}):s.points;
     sujets.push({titre:titreMod, points:ptsList});
     art++;
   });
   if(sujets.length===0){ showToast("Choisissez au moins un sujet à l'étape Sujets"); return; }
 
-  var sujetsHtml = sujets.map(function(s, idx){
-    var pts = s.points && s.points.length
-      ? "<ul style='margin:6px 0 0 18px;padding:0;'>"+s.points.map(function(pt){return "<li style='margin-bottom:4px;font-size:12px;line-height:1.5;'>"+pt+"</li>";}).join("")+"</ul>"
-      : "";
+  var sujetsHtml = sujets.map(function(s,idx){
+    var pts=s.points&&s.points.length
+      ?"<ul style='margin:6px 0 0 18px;padding:0;'>"+s.points.map(function(pt){return "<li style='margin-bottom:4px;font-size:12px;line-height:1.5;'>"+pt+"</li>";}).join("")+"</ul>"
+      :"";
     return "<div style='margin-bottom:12px;border:1px solid #999;page-break-inside:avoid;'>"
-      +"<div style='background:#7A3C00;color:#fff;padding:7px 10px;font-size:13px;font-weight:700;'>✅ "+s.titre+"</div>"
+      +"<div style='background:#1a1a1a;color:#fff;padding:7px 10px;font-size:13px;font-weight:700;'>✅ "+s.titre+"</div>"
       +"<div style='padding:8px 10px;'>"+pts+"</div></div>";
   }).join("");
 
-  // Infractions cochées
-  var infractions = (D.infractions||[]).filter(function(_,i){return infrSel[i];});
-  var infrHtml = infractions.length
-    ? "<ul style='margin:6px 0 0 18px;padding:0;'>"+infractions.map(function(inf){return "<li style='margin-bottom:4px;font-size:12px;font-weight:600;'>"+inf+"</li>";}).join("")+"</ul>"
-    : "<p style='font-size:11px;color:#888;'>(Aucune infraction cochée)</p>";
+  var infractions=(D.infractions||[]).filter(function(_,i){return infrSel[i];});
+  var infrHtml=infractions.length
+    ?"<ul style='margin:6px 0 0 18px;padding:0;'>"+infractions.map(function(inf){return "<li style='margin-bottom:4px;font-size:12px;font-weight:600;'>"+inf+"</li>";}).join("")+"</ul>"
+    :"<p style='font-size:11px;color:#888;'>(Aucune infraction sélectionnée)</p>";
+  var bilanTxt=get("pause_bilan")||D.bilan_defaut;
+  var periode=get("pause_periode")||"";
 
-  var bilanTxt = get("pause_bilan") || D.bilan_defaut;
-  var periode = get("pause_periode") || "";
-
-  // Grille de signatures travailleurs
-  var sigRows = "";
-  for(var i=0;i<18;i++){
-    sigRows += "<tr><td style='border:1px solid #999;padding:9px 6px;font-size:11px;width:5%;text-align:center;'>"+(i+1)+"</td>"
-      +"<td style='border:1px solid #999;padding:9px 6px;'></td>"
-      +"<td style='border:1px solid #999;padding:9px 6px;'></td></tr>";
+  var sigRows="";
+  for(var i=1;i<=10;i++){
+    sigRows+="<tr><td style='border:1px solid #999;padding:0;width:6%;text-align:center;font-size:11px;font-weight:700;color:#888;height:32px;'>"+i+"</td>"
+      +"<td style='border:1px solid #999;padding:0;width:52%;'></td>"
+      +"<td style='border:1px solid #999;padding:0;width:42%;'></td></tr>";
   }
 
-  var html="<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'><style>"
-    +"body{font-family:Arial;font-size:12px;margin:16px;color:#1a1a1a;}"
-    +".entete{border-bottom:3px solid #C8102E;padding-bottom:8px;margin-bottom:12px;}"
-    +"h1{font-size:20px;color:#1a1a1a;margin:0;text-align:center;}"
-    +".sub{font-size:11px;color:#666;margin-top:2px;text-align:center;}"
-    +".infobox{border:1px solid #999;margin-bottom:12px;width:100%;border-collapse:collapse;}"
-    +".infobox td{border:1px solid #ccc;padding:6px 8px;font-size:11px;}"
-    +".infobox .lbl{background:#f0f0f0;font-weight:700;width:22%;}"
-    +"h2{font-size:13px;background:#1a1a1a;color:#fff;padding:6px 10px;margin:14px 0 8px;}"
-    +".bilan{background:#FDF0EF;border-left:4px solid #C8102E;padding:10px 14px;margin-bottom:10px;font-size:11px;line-height:1.5;}"
-    +".politique{background:#FFF8E0;border:1px solid #C8A000;padding:10px 14px;margin-bottom:10px;font-size:11px;line-height:1.5;font-weight:600;}"
-    +"table{width:100%;border-collapse:collapse;}"
-    +"th{background:#1A1A1A;color:#fff;padding:6px;font-size:10px;border:1px solid #999;}"
-    +".legal{font-size:9px;font-style:italic;color:#555;border:1px solid #ccc;padding:8px;margin-top:12px;line-height:1.5;}"
-    +".engage{background:#1a1a1a;color:#fff;padding:10px 14px;font-size:12px;font-weight:700;text-align:center;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;}"
-    +"@media print{body{margin:8px;}h2,.engage{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}"
-    +"</style></head><body>"
-    +"<div class='entete'><h1>PAUSE SANTÉ SÉCURITÉ</h1>"
-    +"<div class='sub'>"+get("r_chantier")+" — Joliette | Mandat no : 26-427</div></div>"
+  var CSS="*{box-sizing:border-box;margin:0;padding:0;}"
+    +"body{font-family:Arial,sans-serif;font-size:12px;padding:16px;color:#1a1a1a;}"
+    +".entete{text-align:center;padding-bottom:8px;border-bottom:3px solid #C8102E;margin-bottom:12px;}"
+    +".org{font-size:24px;font-weight:900;color:#C8102E;letter-spacing:-1px;font-style:italic;}"
+    +".coord{font-size:10px;color:#555;margin-top:2px;}"
+    +"h2{font-size:13px;background:#1a1a1a;color:#fff;padding:6px 10px;margin:12px 0 7px;}"
+    +".infobox{width:100%;border-collapse:collapse;margin-bottom:10px;}"
+    +".infobox td{border:1px solid #ccc;padding:5px 7px;font-size:11px;}"
+    +".infobox .lbl{background:#f0f0f0;font-weight:700;width:18%;}"
+    +".bilan{background:#FDF0EF;border-left:4px solid #C8102E;padding:9px 12px;margin-bottom:8px;font-size:11px;line-height:1.5;}"
+    +".pol{background:#FFF8E0;border:1px solid #C8A000;padding:8px 12px;font-size:11px;line-height:1.5;font-weight:600;margin-bottom:8px;}"
+    +"table.sig{width:100%;border-collapse:collapse;}"
+    +"table.sig th{background:#1a1a1a;color:#fff;padding:6px;font-size:10px;border:1px solid #999;text-align:left;}"
+    +".engage{background:#1a1a1a;color:#fff;padding:9px 14px;font-size:12px;font-weight:700;text-align:center;margin-bottom:6px;text-transform:uppercase;}"
+    +".legal{font-size:9px;font-style:italic;color:#555;border:1px solid #ccc;padding:6px;margin-top:10px;line-height:1.5;}"
+    +"@media print{@page{size:letter;margin:12mm;}body{padding:0;}.org,.entete *,h2,table.sig th,.engage{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}";
+
+  var html="<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'><style>"+CSS+"</style></head><body>"
+    +"<div class='entete'><div class='org'>PAUSE SANTÉ SÉCURITÉ</div><div class='coord'>EquipeSST — Action SST — Pierre-Pascal Ducharme, CoSS — 450-803-6812</div></div>"
     +"<table class='infobox'>"
     +"<tr><td class='lbl'>Date de la pause</td><td>"+get("r_date")+"</td><td class='lbl'>Chantier</td><td>"+get("r_chantier")+"</td></tr>"
-    +"<tr><td class='lbl'>Responsable</td><td>"+get("r_coss")+"</td><td class='lbl'>Sous-traitant</td><td>_______________________</td></tr>"
+    +"<tr><td class='lbl'>Responsable</td><td>"+get("r_coss")+"</td><td class='lbl'>Sous-traitant</td><td style='min-width:120px;'></td></tr>"
     +"</table>"
     +"<h2>BILAN DES OBSERVATIONS"+(periode?" — "+periode:"")+"</h2>"
     +"<div class='bilan'>"+bilanTxt+"</div>"
     +"<p style='font-size:11px;font-weight:700;margin-bottom:4px;'>Infractions les plus fréquentes :</p>"
     +infrHtml
-    +"<div class='politique'>"+D.politique+"</div>"
+    +"<div class='pol'>"+D.politique+"</div>"
     +"<h2>SUJETS OBLIGATOIRES DE LA PAUSE SÉCURITÉ</h2>"
     +sujetsHtml
     +"<h2>QUESTIONS ET COMMENTAIRES DES TRAVAILLEURS</h2>"
-    +"<div style='border:1px solid #999;min-height:36px;padding:8px;font-size:11px;color:#888;'>(Noter les questions soulevées — toute question sans réponse sera traitée à la prochaine pause)</div>"
+    +"<div style='border:1px solid #999;min-height:34px;padding:8px;font-size:11px;color:#aaa;'>Espace pour les questions soulevées par les travailleurs...</div>"
     +"<div style='page-break-before:always;'></div>"
-    +"<div class='engage'>J'ai lu, compris et m'engage à respecter ces consignes de sécurité</div>"
-    +"<table><tr><th style='width:6%;'>#</th><th style='width:55%;'>Nom en lettres carrées (lisible)</th><th style='width:39%;'>Signature</th></tr>"+sigRows+"</table>"
-    +"<p style='margin-top:14px;font-size:11px;'>Signature du responsable SST : ___________________________________</p>"
-    +"<div class='legal'>Équipe SST — Experts en gestion de la santé et sécurité sur les chantiers de construction | Mandat 26-427. Conformément à l'article 51 de la LSST (RLRQ c. S-2.1), l'employeur doit informer et former ses travailleurs.</div>"
+    +"<div class='engage'>J’ai lu, compris et m’engage à respecter ces consignes de sécurité</div>"
+    +"<table class='sig'><tr><th style='width:6%;'>#</th><th style='width:52%;'>NOM EN LETTRES CARRÉES (LISIBLE)</th><th style='width:42%;'>SIGNATURE</th></tr>"+sigRows+"</table>"
+    +"<p style='margin-top:12px;font-size:11px;'>Signature du responsable SST : ___________________________________</p>"
+    +"<div class='legal'>Conformément à l'article 51 de la LSST (RLRQ c. S-2.1), l'employeur doit informer et former ses travailleurs. Document conservé aux fins de conformité réglementaire.</div>"
     +"</body></html>";
 
-  // Envoyer vers Google Sheets (onglet Pauses Securite) + courriel
-  var titresSujets = sujets.map(function(s){return s.titre;}).join("; ");
-  envoyer({
-    type: "pause",
-    date: get("r_date"),
-    noComite: get("r_no"),
-    chantier: get("r_chantier"),
-    animateur: get("r_coss"),
-    nbSujets: sujets.length,
-    sujets: titresSujets,
-    infractions: infractions.join("; ")
-  }, function(){
-    showToast("Pause envoyée au registre et par courriel");
-  });
+  var titresSujets=sujets.map(function(s){return s.titre;}).join("; ");
+  var imgP=new Image(); imgP.onload=imgP.onerror=function(){};
+  imgP.src=APPS_URL+"?type=pause&date="+encodeURIComponent(get("r_date"))+"&noComite="+encodeURIComponent(get("r_no"))+"&chantier="+encodeURIComponent(get("r_chantier"))+"&animateur="+encodeURIComponent(get("r_coss"))+"&nbSujets="+sujets.length+"&sujets="+encodeURIComponent(titresSujets);
+  setTimeout(function(){ showToast("Pause envoyée au registre!"); }, 2500);
 
-  imprimerDoc(html, "Pause_securite_"+(get("r_date")||""));
+  imprimerDoc(html,"Pause_securite_"+get("r_no")+"_"+get("r_date"));
 }
 
-// ── PDF ──
+
+function imprimerPresences() {
+  var get=function(id){var e=document.getElementById(id);return e?e.value:"";};
+  var CSS="*{box-sizing:border-box;margin:0;padding:0;}"
+    +"body{font-family:Arial,sans-serif;font-size:12px;padding:16px;color:#1a1a1a;}"
+    +".entete{text-align:center;margin-bottom:14px;padding-bottom:8px;border-bottom:3px solid #C8102E;}"
+    +".entete .org{font-size:26px;font-weight:900;color:#C8102E;letter-spacing:-1px;font-style:italic;}"
+    +".entete .coord{font-size:10px;color:#555;margin-top:2px;}"
+    +".titre{font-size:15px;font-weight:700;text-align:center;margin:10px 0;}"
+    +".infoline{display:table;width:100%;border-collapse:collapse;margin-bottom:0;}"
+    +".infoline .row{display:table-row;}"
+    +".infoline .c{display:table-cell;border:1px solid #1a1a1a;padding:5px 6px;font-size:11px;}"
+    +".infoline .lbl{background:#e8e8e8;font-weight:700;width:50px;}"
+    +"table.pres{width:100%;border-collapse:collapse;margin-top:0;}"
+    +"table.pres th{background:#1a1a1a;color:#fff;padding:7px 6px;font-size:11px;font-weight:700;border:1px solid #1a1a1a;text-align:left;}"
+    +"table.pres td{border:1px solid #999;padding:0;height:33px;}"
+    +".legal{font-size:9px;font-style:italic;color:#555;margin-top:8px;line-height:1.5;border:1px solid #ccc;padding:6px;}"
+    +"@media print{@page{size:letter;margin:12mm;}body{padding:0;}.entete .org,.entete *,table.pres th{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}";
+
+  var lignes="";
+  for(var i=1;i<=nbLignesPres;i++){
+    lignes+="<tr>"
+      +"<td style='width:28%;'></td>"
+      +"<td style='width:20%;'></td>"
+      +"<td style='width:17%;'></td>"
+      +"<td style='width:16%;'></td>"
+      +"<td style='width:19%;'></td>"
+      +"</tr>";
+  }
+  var pdfHtml="<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'><style>"+CSS+"</style></head><body>"
+    +"<div class='entete'><div class='org'>EquipeSST</div><div class='coord'>Action SST — Pierre-Pascal Ducharme, CoSS — 450-803-6812</div></div>"
+    +"<div class='titre'>Comité de chantier no."+get("r_no")+"</div>"
+    +"<table style='width:100%;border-collapse:collapse;margin-bottom:0;'>"
+    +"<tr><td style='border:1px solid #1a1a1a;padding:5px 6px;font-size:11px;background:#e8e8e8;font-weight:700;width:45px;'>Date :</td>"
+    +"<td style='border:1px solid #1a1a1a;padding:5px 6px;font-size:11px;'>"+get("r_date")+"</td>"
+    +"<td style='border:1px solid #1a1a1a;padding:5px 6px;font-size:11px;background:#e8e8e8;font-weight:700;width:45px;'>Lieu :</td>"
+    +"<td style='border:1px solid #1a1a1a;padding:5px 6px;font-size:11px;'>"+get("r_lieu")+"</td>"
+    +"<td style='border:1px solid #1a1a1a;padding:5px 6px;font-size:11px;background:#e8e8e8;font-weight:700;width:50px;'>Heure :</td>"
+    +"<td style='border:1px solid #1a1a1a;padding:5px 6px;font-size:11px;'>"+get("r_heure")+"</td></tr></table>"
+    +"<table class='pres'><tr>"
+    +"<th style='width:28%;'>Nom</th>"
+    +"<th style='width:20%;'>Compagnie</th>"
+    +"<th style='width:17%;'>Fonction</th>"
+    +"<th style='width:16%;'>Téléphone</th>"
+    +"<th style='width:19%;'>Adresse courriel</th>"
+    +"</tr>"+lignes+"</table>"
+    +"<div class='legal'>Le présent compte rendu est un résumé fidèle des discussions et des décisions prises lors de la réunion de chantier ci-haut mentionnée. Tout commentaire ou correction à apporter aux minutes de la réunion, devra être faite dans les 4 jours suivants sa réception, sinon elles seront réputées justes et acceptées.</div>"
+    +"</body></html>";
+  imprimerDoc(pdfHtml, "Presence_comite_"+get("r_no")+"_"+get("r_date"));
+}
+
 function genPDF() {
   var get=function(id){var e=document.getElementById(id);return e?e.value:"";};
+  var noReu=get("r_no")||"—";
+  var CSS="*{box-sizing:border-box;margin:0;padding:0;}"
+    +"body{font-family:Arial,sans-serif;font-size:12px;padding:16px;color:#1a1a1a;}"
+    +".entete{text-align:center;margin-bottom:10px;padding-bottom:6px;border-bottom:3px solid #C8102E;}"
+    +".entete .org{font-size:28px;font-weight:900;color:#C8102E;letter-spacing:-1px;font-style:italic;}"
+    +".entete .coord{font-size:10px;color:#555;margin-top:2px;}"
+    +".titre{font-size:16px;font-weight:700;text-align:center;margin:8px 0 10px;}"
+    +".infos{font-size:11px;margin-bottom:4px;}"
+    +"table{width:100%;border-collapse:collapse;}"
+    +"th{background:#1a1a1a;color:#fff;padding:7px 5px;font-size:10px;font-weight:700;border:1px solid #1a1a1a;vertical-align:middle;}"
+    +"td{border:1px solid #999;padding:6px 5px;font-size:11px;vertical-align:top;}"
+    +".cn{width:44px;text-align:center;font-weight:700;vertical-align:middle;font-size:10px;}"
+    +".ca{width:32px;text-align:center;font-weight:700;vertical-align:middle;font-size:10px;}"
+    +".cact{width:56px;text-align:center;vertical-align:middle;font-size:10px;}"
+    +".csui{width:56px;text-align:center;vertical-align:middle;font-size:10px;}"
+    +".pause-txt{color:#C8102E;font-style:italic;font-weight:700;text-align:center;display:block;margin-top:6px;font-size:11px;line-height:1.5;}"
+    +"ul{margin:4px 0 4px 16px;padding:0;}li{margin-bottom:2px;}"
+    +".legal{font-size:9px;font-style:italic;color:#555;margin-top:8px;line-height:1.5;border:1px solid #ccc;padding:6px;}"
+    +"@media print{@page{size:letter;margin:12mm;}body{padding:0;}.entete .org,.entete *,th{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}";
 
-  // Présences
-  var presRows="";
-  document.querySelectorAll("[id^=pres_]").forEach(function(div){
-    var id=div.id.replace("pres_","");
-    var nom=get("pnom_"+id);
-    if(!nom) return;
-    presRows+="<tr><td style='border:1px solid #999;padding:4px 6px;font-size:10px;'>"+nom+"</td>"
-      +"<td style='border:1px solid #999;padding:4px 6px;font-size:10px;'>"+get("pcomp_"+id)+"</td>"
-      +"<td style='border:1px solid #999;padding:4px 6px;font-size:10px;'>"+get("pfonc_"+id)+"</td>"
-      +"<td style='border:1px solid #999;padding:4px 6px;font-size:10px;'>"+get("ptel_"+id)+"</td>"
-      +"<td style='border:1px solid #999;padding:10px 6px;'></td></tr>";
-  });
-  // compléter avec lignes vides
-  for(var k=0;k<3;k++){ presRows+="<tr><td style='border:1px solid #999;padding:8px;'></td><td style='border:1px solid #999;'></td><td style='border:1px solid #999;'></td><td style='border:1px solid #999;'></td><td style='border:1px solid #999;'></td></tr>"; }
-
-  // Articles
   var art=1, artRows="";
-  function addRow(num, titre, contenu, action, suivi){
-    artRows+="<tr>"
-      +"<td style='border:1px solid #999;padding:5px;text-align:center;font-size:10px;font-weight:700;width:30px;'>"+(num<10?"0"+num:num)+"</td>"
-      +"<td style='border:1px solid #999;padding:6px 8px;font-size:11px;'>"+contenu+"</td>"
-      +"<td style='border:1px solid #999;padding:5px;font-size:10px;text-align:center;width:60px;'>"+(action||"")+"</td>"
-      +"<td style='border:1px solid #999;padding:5px;font-size:10px;text-align:center;width:60px;'>"+(suivi||"")+"</td></tr>";
+  function addRow(reu,num,contenu,action,suivi){
+    artRows+="<tr><td class='cn'>"+reu+"</td><td class='ca'>"+(num<10?"0"+num:num)+"</td><td>"+contenu+"</td><td class='cact'>"+(action||"")+"</td><td class='csui'>"+(suivi||"")+"</td></tr>";
   }
+
   D.procedure.forEach(function(p){
-    addRow(art, p.titre, "<b>"+p.titre+"</b><br>"+p.texte, get("act_"+art), get("suivi_"+art)); art++;
+    addRow(noReu,art,"<b>"+p.titre+"</b><br>"+p.texte,get("act_"+art),get("suivi_"+art)); art++;
   });
+
   D.sujets.forEach(function(s,i){
     if(!sujetSel[i]) return;
-    // Lire le titre et les points MODIFIÉS depuis les champs
-    var titreMod = get("stitre_"+art) || (s.titre+" — "+s.ref);
-    var pointsMod = get("spoints_"+art);
-    var ptsList = pointsMod ? pointsMod.split("\n").filter(function(l){return l.trim();}) : s.points;
-    var pts="<ul style='margin:4px 0 4px 16px;padding:0;'>"+ptsList.map(function(pt){return "<li style='margin-bottom:2px;'>"+pt+"</li>";}).join("")+"</ul>";
-    var contenu="<b>"+titreMod+"</b>"+pts+"<span style='color:#C8102E;font-style:italic;font-size:10px;'>"+D.pause+"</span>";
-    addRow(art, titreMod, contenu, get("act_"+art), get("suivi_"+art)); art++;
-  });
-  D.procedure_fin.forEach(function(p){
-    var contenu = "<b>"+p.titre+"</b>";
-    var txt = get("txt_"+art);
-    if(p.type === "oui_non") {
-      var ta = document.getElementById("txt_"+art);
-      var repNon = ta && ta.dataset.repNon === "1";
-      contenu += "<br>" + (repNon || !txt ? p.texte_non : txt);
-    } else if(p.type === "varia") {
-      contenu += "<br>" + (txt || "Aucun point varia.");
-    } else {
-      contenu += "<br>" + (txt || p.texte || "");
-    }
-    addRow(art, p.titre, contenu, get("act_"+art), get("suivi_"+art)); art++;
+    var titreMod=get("stitre_"+art)||(s.titre+" — "+s.ref);
+    var pointsMod=get("spoints_"+art);
+    var ptsList=pointsMod?pointsMod.split("\n").filter(function(l){return l.trim();}):s.points;
+    var pts=ptsList.length?"<ul>"+ptsList.map(function(pt){return "<li><b>*</b>"+pt+"</li>";}).join("")+"</ul>":"";
+    var contenu="<b>"+titreMod+"</b>"+pts+"<span class='pause-txt'>"+D.pause+"</span>";
+    addRow(noReu,art,contenu,get("act_"+art),get("suivi_"+art)); art++;
   });
 
-  var html="<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'><style>"
-    +"body{font-family:Arial;font-size:12px;margin:16px;color:#1a1a1a;}"
-    +"h1{font-size:16px;text-align:center;margin-bottom:4px;}"
-    +".sub{font-size:10px;color:#666;text-align:center;margin-bottom:12px;}"
-    +"table{width:100%;border-collapse:collapse;margin-bottom:10px;}"
-    +"th{background:#1A1A1A;color:#fff;padding:5px;font-size:10px;border:1px solid #999;}"
-    +".info{font-size:11px;margin:2px 0;}"
-    +".info b{display:inline-block;min-width:90px;}"
-    +".legal{font-size:9px;font-style:italic;color:#555;border:1px solid #ccc;padding:6px;margin:8px 0;}"
-    +"@media print{body{margin:8px;}}"
-    +"</style></head><body>"
-    +"<h1>Comité de chantier SST — No "+get("r_no")+"</h1>"
-    +"<div class='sub'>Procès-verbal · Art. 90 LSST · Règlement sur les comités de chantier</div>"
-    +"<div class='info'><b>Date :</b> "+get("r_date")+" &nbsp;&nbsp; <b>Heure :</b> "+get("r_heure")+"</div>"
-    +"<div class='info'><b>Lieu :</b> "+get("r_lieu")+"</div>"
-    +"<div class='info'><b>Maître d&#39;oeuvre :</b> "+get("r_mo")+" &nbsp;&nbsp; <b>Agent :</b> "+get("r_coss")+"</div>"
-    +"<h3 style='font-size:12px;margin:10px 0 4px;'>Présences</h3>"
-    +"<table><tr><th>Nom</th><th>Compagnie</th><th>Fonction</th><th>Téléphone</th><th>Signature</th></tr>"+presRows+"</table>"
-    +"<div class='legal'>Le présent compte rendu est un résumé fidèle des discussions et des décisions prises lors de la réunion de chantier ci-haut mentionnée. Tout commentaire ou correction devra être fait dans les 4 jours suivant sa réception, sinon il sera réputé juste et accepté.</div>"
-    +"<h3 style='font-size:12px;margin:10px 0 4px;'>Ordre du jour</h3>"
-    +"<table><tr><th style='width:30px;'>Art.</th><th>Description</th><th style='width:60px;'>Action par</th><th style='width:60px;'>Suivi</th></tr>"+artRows+"</table>"
+  D.procedure_fin.forEach(function(p){
+    var contenu="<b>"+p.titre+"</b>";
+    var txt=get("txt_"+art);
+    if(p.type==="oui_non"){var ta=document.getElementById("txt_"+art);var repNon=ta&&ta.dataset.repNon==="1";contenu+="<br>"+(repNon||!txt?p.texte_non:txt);}
+    else if(p.type==="varia"){contenu+="<br>"+(txt||"Aucun point varia.");}
+    else{contenu+="<br>"+(txt||p.texte||"");}
+    addRow(noReu,art,contenu,get("act_"+art),get("suivi_"+art)); art++;
+  });
+
+  var html="<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'><style>"+CSS+"</style></head><body>"
+    +"<div class='entete'><div class='org'>EquipeSST</div><div class='coord'>Action SST — Pierre-Pascal Ducharme, CoSS — 450-803-6812</div></div>"
+    +"<div class='titre'>Comité de chantier no."+noReu+"</div>"
+    +"<div class='infos'><b>Date :</b> "+get("r_date")+" &nbsp;—&nbsp; <b>Lieu :</b> "+get("r_lieu")+" &nbsp;—&nbsp; <b>Heure :</b> "+get("r_heure")+"</div>"
+    +"<div class='infos'><b>Chantier :</b> "+get("r_chantier")+" &nbsp;—&nbsp; <b>Maître d’oeuvre :</b> "+get("r_mo")+"</div>"
+    +"<div class='legal'>Le présent compte rendu est un résumé fidèle des discussions et des décisions prises lors de la réunion de chantier ci-haut mentionnée. Tout commentaire ou correction à apporter aux minutes de la réunion, devra être faite dans les 4 jours suivants sa réception, sinon elles seront réputées justes et acceptées.</div>"
+    +"<br>"
+    +"<table>"
+    +"<tr><th class='cn'>Réunion</th><th class='ca'>Art</th><th>Description</th><th class='cact'>Action par :</th><th class='csui'>Suivi</th></tr>"
+    +artRows
+    +"</table>"
     +"<div class='legal'>Veuillez prendre note que si des modifications doivent être apportées à ce document, vous devrez aviser le responsable par écrit dans un délai de 24 heures de la date de transmission, faute de quoi le présent document deviendra officiel et liera les parties.</div>"
     +"<p style='font-size:11px;margin-top:10px;'><b>Remarques :</b> "+get("r_remarques")+"</p>"
-    +"<p style='font-size:11px;margin-top:14px;'>Compte rendu rédigé par : "+get("r_coss")+"</p>"
-    +"<p style='font-size:11px;font-weight:700;'>Prochaine réunion : "+get("r_prochaine")+"</p>"
+    +"<p style='font-size:11px;margin-top:8px;font-weight:700;'>Prochaine réunion : "+get("r_prochaine")+"</p>"
+    +"<p style='font-size:11px;margin-top:4px;'>Compte rendu rédigé par : "+get("r_coss")+"</p>"
     +"</body></html>";
-  imprimerDoc(html, "Proces_verbal_comite_"+(get("r_no")||"")+"_"+(get("r_date")||""));
+  imprimerDoc(html,"Proces_verbal_comite_"+noReu+"_"+get("r_date"));
 }
 
 // ── SOUMISSION ──
@@ -740,37 +712,54 @@ function envoyer(params, cb) {
 }
 function soumettre() {
   var get=function(id){var e=document.getElementById(id);return e?e.value:"";};
-  var sujets = D.sujets.filter(function(_,i){return sujetSel[i];}).map(function(s){return s.titre;});
-  var presList=[];
-  document.querySelectorAll("[id^=pres_]").forEach(function(div){
-    var id=div.id.replace("pres_","");
-    var nom=get("pnom_"+id);
-    if(nom) presList.push(nom+" ("+get("pcomp_"+id)+") "+get("pfonc_"+id)+" tel:"+get("ptel_"+id));
+  // Collecter les sujets
+  var artStart = D.procedure.length + 1;
+  var sujetsDetail = [];
+  var artC = artStart;
+  D.sujets.forEach(function(s,i){
+    if(!sujetSel[i]) return;
+    sujetsDetail.push((artC<10?"0"+artC:artC)+". "+(get("stitre_"+artC)||s.titre));
+    artC++;
   });
+  // Accidents et CNESST
+  var accTxt=""; var cnTxt="";
+  D.procedure_fin.forEach(function(p,fi){
+    var idx = artStart + (Object.keys(sujetSel).filter(function(k){return sujetSel[k];}).length) + fi;
+    var ta=document.getElementById("txt_"+idx);
+    if(p.titre.indexOf("accident")>=0||p.titre.indexOf("Accident")>=0){
+      accTxt = ta&&ta.dataset.repNon==="1" ? "Aucun" : (get("txt_"+idx)||"Aucun");
+    }
+    if(p.titre.indexOf("CNESST")>=0){
+      cnTxt = ta&&ta.dataset.repNon==="1" ? "Aucune" : (get("txt_"+idx)||"Aucune");
+    }
+  });
+  var infractions=(D.infractions||[]).filter(function(_,i){return infrSel[i];});
   var btn=document.getElementById("btn-sub");
-  btn.disabled=true; btn.textContent="⏳ Enregistrement...";
-  envoyer({
-    type:"reunion",
-    noReunion:get("r_no"), date:get("r_date"),
-    heureDebut:get("r_heure"), heureFin:"",
-    typeReunion:"Comité de chantier",
-    chantier:get("r_chantier"), maitreDoeuvre:get("r_mo"),
-    cossAnimateur:get("r_coss"), lieu:get("r_lieu"),
-    prochaineReunion:get("r_prochaine"),
-    pointsODJTraites:sujets.length+" sujets de pause sécurité",
-    notesODJ:sujets.join("; "),
-    presences:presList.join(" | "),
-    nbPresences:presList.length,
-    remarquesFinales:get("r_remarques"),
-    signatureCoSS:hasSig("sig_coss")?"Signe":"Non signe"
-  }, function(){
-    btn.disabled=false; btn.textContent="✅ Enregistré avec succès!";
-    document.getElementById("alertOk").classList.add("show");
-    window.scrollTo(0,0);
-    setTimeout(function(){ btn.textContent="📤 Enregistrer"; },5000);
-  });
+  btn.disabled=true; btn.textContent="⏳ Envoi en cours...";
+  var img=new Image(); img.onload=img.onerror=function(){};
+  img.src=APPS_URL+"?type=reunion"
+    +"&noReunion="+encodeURIComponent(get("r_no"))
+    +"&date="+encodeURIComponent(get("r_date"))
+    +"&heure="+encodeURIComponent(get("r_heure"))
+    +"&chantier="+encodeURIComponent(get("r_chantier"))
+    +"&maitreDoeuvre="+encodeURIComponent(get("r_mo"))
+    +"&lieu="+encodeURIComponent(get("r_lieu"))
+    +"&cossAnimateur="+encodeURIComponent(get("r_coss"))
+    +"&nbSujets="+sujetsDetail.length
+    +"&sujets="+encodeURIComponent(sujetsDetail.join(" | "))
+    +"&accidents="+encodeURIComponent(accTxt)
+    +"&cnesst="+encodeURIComponent(cnTxt)
+    +"&infractions="+encodeURIComponent(infractions.join("; "))
+    +"&bilan="+encodeURIComponent(get("pause_bilan")||"")
+    +"&remarques="+encodeURIComponent(get("r_remarques"))
+    +"&prochaineReunion="+encodeURIComponent(get("r_prochaine"))
+    +"&signatureCoSS="+encodeURIComponent(hasSig("sig_coss")?"Signé":"Non signé");
+  setTimeout(function(){
+    btn.disabled=false;
+    btn.textContent="✅ Envoyé au registre!";
+    setTimeout(function(){ btn.textContent="📤 Envoyer au registre"; },4000);
+  },2500);
 }
-
 function showToast(m){var t=document.getElementById("toast");t.textContent=m;t.classList.add("show");setTimeout(function(){t.classList.remove("show");},3000);}
 
 document.addEventListener("DOMContentLoaded", function(){
