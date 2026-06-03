@@ -311,7 +311,7 @@ function ajouterSujetPerso() {
 function toggleSujet(i) {
   sujetSel[i] = !sujetSel[i];
   document.getElementById("sjp_"+i).className = "sujet-pick"+(sujetSel[i]?" sel":"");
-  document.getElementById("sjchk_"+i).textContent = sujetSel[i]?"✓":"";
+  document.getElementById("sjchk_"+i).textContent = sujetSel[i]?"✓":""; sauverEtat();
 }
 
 // ── GÉNÉRATION ODJ ──
@@ -335,6 +335,9 @@ function genererODJ() {
   D.procedure_fin.forEach(function(p){
     cont.appendChild(makeArticleFin(art++, p));
   });
+  try{var _e=JSON.parse(localStorage.getItem("reunion_etat")||"{}");if(_e.odj)Object.keys(_e.odj).forEach(function(id){var el=document.getElementById(id);if(el)el.value=_e.odj[id];});}catch(ex){}
+  document.querySelectorAll("[id^=stitre_],[id^=spoints_],[id^=txt_],[id^=act_],[id^=suivi_]").forEach(function(el){el.addEventListener("input",sauverEtat);});
+
 }
 
 function makeArticleSujet(num, sujetIdx, s) {
@@ -523,6 +526,40 @@ function imprimerDoc(htmlContent, nomFichier) {
 }
 
 
+// MEMOIRE
+function sauverEtat(){
+  try{
+    var e={sujetSel:sujetSel,infrSel:infrSel,infos:{},odj:{}};
+    ["r_no","r_date","r_heure","r_lieu","r_chantier","r_mo","r_coss","r_prochaine","pause_bilan","pause_periode","r_remarques"].forEach(function(id){
+      var el=document.getElementById(id);if(el)e.infos[id]=el.value;
+    });
+    document.querySelectorAll("[id^=stitre_],[id^=spoints_],[id^=txt_],[id^=act_],[id^=suivi_]").forEach(function(el){
+      if(el.value)e.odj[el.id]=el.value;
+    });
+    localStorage.setItem("reunion_etat",JSON.stringify(e));
+  }catch(err){}
+}
+function chargerEtat(){
+  try{
+    var e=JSON.parse(localStorage.getItem("reunion_etat")||"{}");
+    if(!e.sujetSel)return;
+    Object.keys(e.sujetSel).forEach(function(k){
+      if(e.sujetSel[k]){
+        sujetSel[k]=true;
+        var el=document.getElementById("sjp_"+k);if(el)el.className="sujet-pick sel";
+        var chk=document.getElementById("sjchk_"+k);if(chk)chk.textContent="✓";
+      }
+    });
+    if(e.infrSel)infrSel=e.infrSel;
+    if(e.infos)Object.keys(e.infos).forEach(function(id){
+      var el=document.getElementById(id);if(el&&e.infos[id])el.value=e.infos[id];
+    });
+    if(e.odj)setTimeout(function(){
+      Object.keys(e.odj).forEach(function(id){var el=document.getElementById(id);if(el)el.value=e.odj[id];});
+    },500);
+  }catch(err){}
+}
+
 function genPauseSecurite() {
   var get=function(id){var e=document.getElementById(id);return e?e.value:"";};
   var artStart = D.procedure.length + 1;
@@ -582,7 +619,7 @@ function genPauseSecurite() {
     +"<div class='entete'><div class='org'>PAUSE SANTÉ SÉCURITÉ</div><div class='coord'>EquipeSST — Action SST — Pierre-Pascal Ducharme, CoSS — 450-803-6812</div></div>"
     +"<table class='infobox'>"
     +"<tr><td class='lbl'>Date de la pause</td><td>"+get("r_date")+"</td><td class='lbl'>Chantier</td><td>"+get("r_chantier")+"</td></tr>"
-    +"<tr><td class='lbl'>Responsable</td><td>"+get("r_coss")+"</td><td class='lbl'>Sous-traitant</td><td style='min-width:120px;'></td></tr>"
+    +"<tr><td class='lbl'>Responsable</td><td style=\"min-width:140px;\">&nbsp;</td><td class='lbl'>Sous-traitant</td><td style='min-width:120px;'></td></tr>"
     +"</table>"
     +"<h2>BILAN DES OBSERVATIONS"+(periode?" — "+periode:"")+"</h2>"
     +"<div class='bilan'>"+bilanTxt+"</div>"
@@ -592,8 +629,8 @@ function genPauseSecurite() {
     +"<h2>SUJETS OBLIGATOIRES DE LA PAUSE SÉCURITÉ</h2>"
     +sujetsHtml
     +"<h2>QUESTIONS ET COMMENTAIRES DES TRAVAILLEURS</h2>"
-    +"<div style='border:1px solid #999;min-height:34px;padding:8px;font-size:11px;color:#aaa;'>Espace pour les questions soulevées par les travailleurs...</div>"
-    +"<div style='page-break-before:always;'></div>"
+    +"<div style='border:1px solid #ccc;min-height:20px;padding:5px 8px;font-size:11px;color:#999;'>Questions et commentaires :</div>"
+    +""
     +"<div class='engage'>J’ai lu, compris et m’engage à respecter ces consignes de sécurité</div>"
     +"<table class='sig'><tr><th style='width:6%;'>#</th><th style='width:52%;'>NOM EN LETTRES CARRÉES (LISIBLE)</th><th style='width:42%;'>SIGNATURE</th></tr>"+sigRows+"</table>"
     +"<p style='margin-top:12px;font-size:11px;'>Signature du responsable SST : ___________________________________</p>"
@@ -794,6 +831,8 @@ document.addEventListener("DOMContentLoaded", function(){
   document.getElementById("r_prochaine").value=p.toISOString().split("T")[0];
   initSujets();
   chargerPresences();
+  chargerEtat();
+  ["r_no","r_date","r_heure","r_lieu","r_chantier","r_mo","r_coss","r_prochaine"].forEach(function(id){var el=document.getElementById(id);if(el)el.addEventListener("input",sauverEtat);});
   // charger nb lignes présences
 });
 </script>
