@@ -297,16 +297,47 @@ function ajouterSujetPerso() {
   D.sujets.push(newSujet);
   var newIdx = D.sujets.length - 1;
   sujetSel[newIdx] = true;
-  // Afficher dans la liste
+  // Afficher dans la liste — cliquable pour cocher/décocher + bouton retirer
   var c = document.getElementById("perso-liste");
   var div = document.createElement("div");
   div.className = "sujet-pick sel";
-  div.innerHTML = '<div class="chk" style="background:var(--vert);border-color:var(--vert);color:#fff;">✓</div><div><div class="t">'+titre+'</div><div class="r">'+(ref||"—")+'</div></div>';
+  div.id = "persoitem_"+newIdx;
+  div.innerHTML = '<div class="chk" id="persochk_'+newIdx+'" style="background:var(--vert);border-color:var(--vert);color:#fff;">✓</div>'
+    +'<div style="flex:1;"><div class="t">'+titre+'</div><div class="r">'+(ref||"—")+'</div></div>'
+    +'<button onclick="retirerSujetPerso(event,'+newIdx+')" style="border:1px solid var(--rouge);background:#fff;color:var(--rouge);font-size:10px;font-weight:700;padding:4px 10px;cursor:pointer;text-transform:uppercase;border-radius:3px;">Retirer</button>';
+  // Clic sur la pastille = cocher/décocher
+  div.querySelector(".chk").onclick = function(e){ e.stopPropagation(); togglePersoSujet(newIdx); };
   c.appendChild(div);
   document.getElementById("perso_titre").value="";
   document.getElementById("perso_ref").value="";
   document.getElementById("perso_contenu").value="";
+  sauverEtat();
   showToast("Sujet ajouté!");
+}
+
+function togglePersoSujet(idx) {
+  sujetSel[idx] = !sujetSel[idx];
+  var div = document.getElementById("persoitem_"+idx);
+  var chk = document.getElementById("persochk_"+idx);
+  if(sujetSel[idx]){
+    div.className = "sujet-pick sel";
+    chk.style.background="var(--vert)"; chk.style.borderColor="var(--vert)"; chk.style.color="#fff"; chk.textContent="✓";
+  } else {
+    div.className = "sujet-pick";
+    chk.style.background="#fff"; chk.style.borderColor="var(--gris-brd)"; chk.style.color="#fff"; chk.textContent="";
+  }
+  sauverEtat();
+}
+
+function retirerSujetPerso(e, idx) {
+  e.stopPropagation();
+  // Décocher et retirer de l'affichage
+  sujetSel[idx] = false;
+  D.sujets[idx] = {titre:"", ref:"", points:[], suivi:"", cat:"perso-supprime"};
+  var div = document.getElementById("persoitem_"+idx);
+  if(div) div.remove();
+  sauverEtat();
+  showToast("Sujet retiré");
 }
 function toggleSujet(i) {
   sujetSel[i] = !sujetSel[i];
