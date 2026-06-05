@@ -371,6 +371,21 @@ function genererODJ() {
 
 }
 
+function retirerSujetODJ(sujetIdx, num) {
+  // Décocher le sujet → il ne reviendra plus dans genererODJ
+  sujetSel[sujetIdx] = false;
+  // Décocher visuellement dans la liste de sujets (étape 2)
+  var sjp = document.getElementById("sjp_"+sujetIdx);
+  var chk = document.getElementById("sjchk_"+sujetIdx);
+  if(sjp) sjp.className = "sujet-pick";
+  if(chk) chk.textContent = "";
+  // Supprimer l'article de l'ODJ
+  var art = document.getElementById("artsujet_"+num);
+  if(art) art.remove();
+  sauverEtat();
+}
+
+
 function makeArticleSujet(num, sujetIdx, s) {
   var div = document.createElement("div");
   div.className = "article-card";
@@ -378,7 +393,7 @@ function makeArticleSujet(num, sujetIdx, s) {
   var pointsTxt = (s.points||[]).join("\n");
   var h = '<div class="article-hdr"><span class="num">POINT '+(num<10?"0"+num:num)+'</span> '
     + '<input type="text" id="stitre_'+num+'" value="'+(s.titre+" — "+s.ref).replace(/"/g,"&quot;")+'" style="flex:1;border:1px solid transparent;background:transparent;font-size:13px;font-weight:700;color:#fff;font-family:Arial;outline:none;padding:2px 4px;" onfocus="this.style.background=\'#fff\';this.style.color=\'#1a1a1a\';this.style.border=\'1px solid #999\';" onblur="this.style.background=\'transparent\';this.style.color=\'#fff\';this.style.border=\'1px solid transparent\';">';
-  h += '<button class="btn-retirer" onclick="document.getElementById(\'artsujet_'+num+'\').remove();" style="margin-left:6px;">Retirer</button>';
+  h += '<button class="btn-retirer" onclick="retirerSujetODJ('+sujetIdx+','+num+')" style="margin-left:6px;">Retirer</button>';
   h += '</div>';
   h += '<div class="article-body">';
   h += '<label style="font-size:9px;font-weight:700;color:#7A3C00;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:3px;">Points (un par ligne — modifiez, ajoutez ou retirez) :</label>';
