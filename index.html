@@ -610,135 +610,78 @@ function genPauseSecurite() {
   var get=function(id){var e=document.getElementById(id);return e?e.value:"";};
   var esc=function(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");};
 
-  // ── Sujets choisis au comité ──
-  var artStart = D.procedure.length + 1;
-  var sujets = [];
-  var art = artStart;
+  var artStart=D.procedure.length+1, art=artStart, sujets=[];
   D.sujets.forEach(function(s,i){
     if(!sujetSel[i]) return;
-    var titreMod=get("stitre_"+art)||s.titre;
-    var pointsMod=get("spoints_"+art);
-    var ptsList=pointsMod?pointsMod.split("\n").filter(function(l){return l.trim();}):s.points;
-    sujets.push({titre:titreMod, ref:s.ref||"", points:ptsList});
+    var t=get("stitre_"+art)||s.titre;
+    var pm=get("spoints_"+art);
+    var pts=pm?pm.split("\n").filter(function(l){return l.trim();}):s.points;
+    sujets.push({titre:t, ref:s.ref||"", points:pts});
     art++;
   });
   if(sujets.length===0){ showToast("Choisissez au moins un sujet à l'étape Sujets"); return; }
 
-  // ── Encadré dans un encadré : chaque sujet = une boîte dans la grande boîte ──
-  var sujetsHtml = sujets.map(function(s){
-    var pts=s.points&&s.points.length
-      ? "<ul>"+s.points.map(function(pt){return "<li>"+esc(pt)+"</li>";}).join("")+"</ul>"
-      : "";
-    return "<div class='sujbox'>"
-      +"<div class='sujttl'>"+esc(s.titre)+(s.ref?"<span class='sujref'>"+esc(s.ref)+"</span>":"")+"</div>"
-      +"<div class='sujbody'>"+pts+"</div></div>";
-  }).join("");
+  var n=0, corps="";
+  sujets.forEach(function(s){
+    n++;
+    corps+="<div class=s><div class=st>"+n+". "+esc(s.titre)
+         +(s.ref?"  <span class=sr>("+esc(s.ref)+")</span>":"")+"</div>";
+    (s.points||[]).forEach(function(p){ corps+="<div class=sp>&bull;  "+esc(p)+"</div>"; });
+    corps+="</div>";
+  });
 
-  // ── Infractions les plus fréquentes + développement ──
-  var infractions=(D.infractions||[]).filter(function(_,i){return infrSel[i];});
-  if(infractions.length===0) infractions=(D.infractions||[]).slice(0,6);
+  var infr=(D.infractions||[]).filter(function(_,i){return infrSel[i];});
+  if(infr.length===0) infr=(D.infractions||[]).slice(0,6);
   var dev=D.infr_dev||{};
-  var liC=(dev.contremaitres||[]).map(function(x){return "<li>"+esc(x)+"</li>";}).join("");
-  var liT=(dev.travailleurs||[]).map(function(x){return "<li>"+esc(x)+"</li>";}).join("");
-  var periode=get("pause_periode")||"";
-  var bilanTxt=get("pause_bilan")||D.bilan_defaut;
-
-  var infrBox="<div class='sujbox'>"
-    +"<div class='sujttl'>Infractions les plus fréquentes"+(periode?"<span class='sujref'>"+esc(periode)+"</span>":"")+"</div>"
-    +"<div class='sujbody'>"
-    +"<p class='bil'>"+esc(bilanTxt)+"</p>"
-    +"<ul>"+infractions.map(function(x){return "<li><b>"+esc(x)+"</b></li>";}).join("")+"</ul>"
-    +(dev.intro?"<p class='devintro'>"+esc(dev.intro)+"</p>":"")
-    +"<div class='devgrid'>"
-    +"<div class='devcol'><div class='devttl'>Ce qui est attendu des contremaîtres</div><ul>"+liC+"</ul></div>"
-    +"<div class='devcol'><div class='devttl'>Ce qui est attendu des travailleurs</div><ul>"+liT+"</ul></div>"
-    +"</div>"
-    +"<p class='pol'>"+esc(D.politique)+"</p>"
-    +"</div></div>";
-
-  // ── Présences : 12 lignes sur 2 colonnes (comme l'annexe 16) ──
-  var presRows="";
-  for(var i=1;i<=6;i++){
-    presRows+="<tr><td class='pn'>"+i+".</td><td class='pl'></td>"
-             +"<td class='pn'>"+(i+6)+".</td><td class='pl'></td></tr>";
+  n++;
+  corps+="<div class=s><div class=st>"+n+". Infractions les plus fréquentes</div>";
+  corps+="<div class=sp>"+esc(get("pause_bilan")||D.bilan_defaut)+"</div>";
+  infr.forEach(function(x){ corps+="<div class=sp>&bull;  "+esc(x)+"</div>"; });
+  if(dev.contremaitres&&dev.contremaitres.length){
+    corps+="<div class=ss>Ce qui est attendu des contremaîtres</div>";
+    dev.contremaitres.forEach(function(x){ corps+="<div class=sp>&bull;  "+esc(x)+"</div>"; });
   }
+  if(dev.travailleurs&&dev.travailleurs.length){
+    corps+="<div class=ss>Ce qui est attendu des travailleurs</div>";
+    dev.travailleurs.forEach(function(x){ corps+="<div class=sp>&bull;  "+esc(x)+"</div>"; });
+  }
+  corps+="<div class=ss>Politique de sécurité du chantier</div><div class=sp>"+esc(D.politique)+"</div>";
+  corps+="</div>";
 
-  var CSS="*{box-sizing:border-box;margin:0;padding:0;}"
-   +"body{font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#000;padding:14px;}"
-   +".top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;}"
-   +".logo{font-size:30px;font-weight:900;letter-spacing:-1.5px;}"
-   +".ppc{font-size:8.5px;color:#444;text-align:right;padding-top:9px;}"
-   +"h1{font-size:16px;text-align:center;font-weight:700;margin:2px 0 5px;}"
-   +".rule{border-bottom:3px solid #1E6B3A;margin-bottom:10px;}"
-   +"table.id{width:100%;border-collapse:collapse;margin-bottom:11px;}"
-   +"table.id td{border:1px solid #000;padding:6px 7px;font-size:11px;font-weight:700;height:26px;}"
-   +".sec{font-size:11px;font-weight:700;margin:0 0 6px;}"
-   +"table.sug{width:100%;border-collapse:collapse;margin-bottom:12px;}"
-   +"table.sug td{font-size:10.5px;padding:3px 4px;width:50%;}"
-   +".dot{display:inline-block;border-bottom:1px dotted #333;min-width:96px;}"
-   +".bigbox{border:1px solid #000;padding:8px;margin-bottom:12px;}"
-   +".sujbox{border:1px solid #666;margin-bottom:8px;page-break-inside:avoid;}"
-   +".sujttl{background:#1E6B3A;color:#fff;padding:5px 8px;font-size:11px;font-weight:700;}"
-   +".sujref{float:right;font-weight:400;font-size:9px;opacity:.9;}"
-   +".sujbody{padding:6px 9px;}"
-   +".sujbody ul{margin:0 0 0 15px;padding:0;}"
-   +".sujbody li{font-size:10.5px;line-height:1.45;margin-bottom:3px;}"
-   +".bil{font-size:10px;line-height:1.45;font-style:italic;background:#F2F2F2;padding:5px 7px;margin-bottom:6px;}"
-   +".devintro{font-size:10px;line-height:1.45;margin:7px 0 5px;font-weight:700;}"
-   +".devgrid{display:flex;gap:10px;margin-top:4px;}"
-   +".devcol{flex:1;border:1px solid #999;padding:5px 7px;}"
-   +".devttl{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid #999;padding-bottom:3px;margin-bottom:4px;}"
-   +".devcol ul{margin:0 0 0 13px;}"
-   +".devcol li{font-size:9.5px;line-height:1.4;margin-bottom:3px;}"
-   +".pol{font-size:9.5px;line-height:1.45;font-weight:700;background:#FFF8E0;border:1px solid #C8A000;padding:5px 7px;margin-top:7px;}"
-   +".prestit{text-align:center;font-weight:700;font-size:12px;margin:10px 0 5px;}"
-   +"table.pres{width:100%;border-collapse:collapse;}"
-   +"table.pres th{border:1px solid #000;padding:5px;font-size:10.5px;font-weight:700;background:#fff;}"
-   +"table.pres td{border:1px solid #000;height:22px;font-size:10.5px;padding:2px 5px;}"
-   +"table.pres td.pn{width:5%;font-weight:400;}"
-   +"table.pres td.pl{width:45%;}"
-   +".par{display:flex;justify-content:space-between;align-items:flex-end;margin-top:12px;font-size:10px;}"
-   +".sigline{text-align:center;}"
-   +".sigline .l{border-top:1px solid #000;width:230px;padding-top:2px;font-size:9.5px;}"
-   +".foot{margin-top:14px;text-align:right;font-size:8.5px;color:#555;}"
-   +"@media print{@page{size:letter;margin:11mm;}body{padding:0;}"
-   +"*{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;color-adjust:exact !important;}}";
+  var rangs="";
+  for(var i=1;i<=6;i++){ rangs+="<tr><td>"+i+".</td><td>"+(i+6)+".</td></tr>"; }
 
-  var sug=[["Protection individuelle","Outils"],["Garde-corps","Périmètres de sécurité"],
-           ["Appareils de levage","Tenue des lieux"],["Protection d'incendie","Bouteilles de gaz comprimé"],
-           ["Échafaudages","Échelles et escabeaux"],["Équipements","Autres"]];
-  var sugRows=sug.map(function(r){
-    return "<tr><td>"+r[0]+" : <span class='dot'>&nbsp;</span></td><td>"+r[1]+" : <span class='dot'>&nbsp;</span></td></tr>";
-  }).join("");
+  var h="<!DOCTYPE html><html lang=fr><head><meta charset='UTF-8'>"
+   +"<title>Annexe 16 — Pause-sécurité</title><style>\n*{box-sizing:border-box;margin:0;padding:0;}\nbody{font-family:Arial,Helvetica,sans-serif;color:#000;background:#fff;}\n.pg{position:relative;width:612pt;margin:0 auto;background:#fff;}\n.ab{position:absolute;line-height:1;white-space:pre;}\n.ln{position:absolute;background:#000;}\n.logo{position:absolute;left:71.52pt;top:35.52pt;width:168.96pt;height:20.40pt;}\n.filet{position:absolute;left:70.56pt;top:104.64pt;width:469.68pt;height:2.40pt;background:#326836;}\n.flux{position:absolute;left:0;top:361.68pt;width:612pt;}\n.boite{margin:0 72pt 0 72pt;width:466.32pt;border:.72pt solid #000;\n       min-height:114pt;padding:7pt 9pt;}\n.s{margin:0 0 7pt 0;page-break-inside:avoid;}\n.s:last-child{margin-bottom:0;}\n.st{font-size:9.4pt;font-weight:700;line-height:1.3;}\n.sr{font-size:8.4pt;font-weight:400;}\n.sp{font-size:9.0pt;line-height:1.38;margin:1.5pt 0 0 13pt;text-indent:-9pt;}\n.ss{font-size:8.8pt;font-weight:700;margin:3pt 0 1pt 4pt;}\n.pres{margin-top:9.23pt;text-align:center;font-size:10.36pt;font-weight:700;}\n.tb{margin:16.21pt 72pt 0 72pt;width:466.32pt;border-collapse:collapse;}\n.tb td{border:.72pt solid #000;height:20.4pt;font-size:9.84pt;padding:0 0 0 6.72pt;\n       vertical-align:middle;width:50%;}\n.tb th{border:.72pt solid #000;height:21.84pt;font-size:9.68pt;font-weight:700;\n       text-align:center;width:50%;}\n.bas{position:relative;margin:17.05pt 72pt 0 72pt;width:466.32pt;height:44pt;}\n.par{position:absolute;left:5.52pt;top:0;font-size:8.88pt;line-height:1.45;width:230pt;}\n.par b{font-weight:700;}\n.sig{position:absolute;left:287.06pt;top:2.42pt;font-size:9.84pt;letter-spacing:.2pt;}\n.sigl{position:absolute;left:343.44pt;top:20.18pt;font-size:9.84pt;}\n.pied{position:fixed;left:0;bottom:-30pt;width:612pt;height:16pt;color:#808080;}\n.pied .v{position:absolute;left:400.32pt;top:4.75pt;font-size:7.92pt;}\n.tiret{position:absolute;left:284.20pt;top:82.30pt;width:8.60pt;height:1.90pt;background:#212121;}\n.pied .p{position:absolute;left:456.11pt;top:2.47pt;font-size:11.04pt;}\n@page{size:letter;margin:0 0 44pt 0;}\n@media print{\n .pg{margin:0;}\n *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;color-adjust:exact !important;}\n}\n</style></head><body><div class=pg>"
+   +"<img class=logo alt='TISSEUR' src=\"data:image/png;base64,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\">"
+   +"<div class=filet></div><div class=tiret></div>"
+   +"<div class=ab style=\"left:350.88pt;top:49.99pt;font-size:8.17pt;color:#808080\">Programme de prévention chantiers de construction</div>\n<div class=ab style=\"left:203.52pt;top:76.95pt;font-size:15.08pt;color:#212121;font-weight:700\">Annexe 16</div>\n<div class=ab style=\"left:298.08pt;top:76.94pt;font-size:15.30pt;color:#212121;font-weight:700\">Pause-sécurité</div>\n<div class=ab style=\"left:77.76pt;top:132.57pt;font-size:9.19pt;color:#000;font-weight:700\">Entrepreneur:</div>\n<div class=ab style=\"left:294.00pt;top:132.55pt;font-size:9.83pt;color:#000;font-weight:700\">Métier / Occupation:</div>\n<div class=ab style=\"left:77.76pt;top:161.58pt;font-size:10.33pt;color:#000;font-weight:700\">Date:</div>\n<div class=ab style=\"left:185.76pt;top:161.59pt;font-size:10.13pt;color:#000;font-weight:700\">Heure:</div>\n<div class=ab style=\"left:294.00pt;top:161.59pt;font-size:10.21pt;color:#000;font-weight:700\">Lieu:</div>\n<div class=ab style=\"left:72.00pt;top:186.63pt;font-size:10.20pt;color:#000;font-weight:700\">SUGGESTIONS POUR PAUSES-SÉCURITÉ :</div>\n<div class=ab style=\"left:72.00pt;top:350.54pt;font-size:10.55pt;color:#000;font-weight:700\">SUJETS DISCUTÉS:</div>\n<div class=ab style=\"left:72.00pt;top:218.23pt;font-size:9.84pt\">Protection individuelle: _________________</div>\n<div class=ab style=\"left:320.16pt;top:218.23pt;font-size:9.84pt\">Outils: ____________________________</div>\n<div class=ab style=\"left:72.00pt;top:237.43pt;font-size:9.84pt\">Garde-corps: ___________________________</div>\n<div class=ab style=\"left:320.16pt;top:237.43pt;font-size:9.84pt\">Périmètres de sécurité: ________________</div>\n<div class=ab style=\"left:72.00pt;top:256.63pt;font-size:9.84pt\">Appareils de levage: ______________________</div>\n<div class=ab style=\"left:320.16pt;top:256.63pt;font-size:9.84pt\">Tenue des lieux: _____________________</div>\n<div class=ab style=\"left:72.00pt;top:275.83pt;font-size:9.84pt\">Protection d'incendie:_____________________</div>\n<div class=ab style=\"left:320.16pt;top:275.83pt;font-size:9.84pt\">Bouteilles de gaz comprimé: _____________</div>\n<div class=ab style=\"left:72.00pt;top:294.79pt;font-size:9.84pt\">Échafaudages:__________________________</div>\n<div class=ab style=\"left:320.16pt;top:294.79pt;font-size:9.84pt\">Échelles et escabeaux:_________________</div>\n<div class=ab style=\"left:72.00pt;top:313.99pt;font-size:9.84pt\">Équipements:__________________________</div>\n<div class=ab style=\"left:320.16pt;top:313.99pt;font-size:9.84pt\">Autres:____________________________</div>\n<div class=ln style=\"left:72.48pt;top:115.68pt;width:465.84pt;height:0.72pt\"></div>\n<div class=ln style=\"left:72.48pt;top:144.48pt;width:465.84pt;height:0.96pt\"></div>\n<div class=ln style=\"left:72.48pt;top:173.52pt;width:465.84pt;height:0.72pt\"></div>\n<div class=ln style=\"left:72.00pt;top:116.16pt;width:0.72pt;height:57.60pt\"></div>\n<div class=ln style=\"left:288.24pt;top:116.16pt;width:0.96pt;height:57.60pt\"></div>\n<div class=ln style=\"left:538.08pt;top:116.16pt;width:0.72pt;height:57.60pt\"></div>\n<div class=ln style=\"left:180.00pt;top:145.20pt;width:0.96pt;height:28.56pt\"></div>"
+   +"<div class=ab style=\"left:146.00pt;top:132.55pt;font-size:9.84pt;font-weight:400\">"+esc(get("r_mo"))+"</div>"
+   +"<div class=ab style=\"left:106.00pt;top:161.59pt;font-size:9.84pt;font-weight:400\">"+esc(get("r_date"))+"</div>"
+   +"<div class=ab style=\"left:221.00pt;top:161.59pt;font-size:9.84pt;font-weight:400\">"+esc(get("r_heure"))+"</div>"
+   +"<div class=ab style=\"left:321.00pt;top:161.59pt;font-size:9.84pt;font-weight:400\">"+esc(get("r_chantier"))+"</div>"
+   +"<div class=flux>"
+   +"<div class=boite>"+corps+"</div>"
+   +"<div class=pres>Présences des participants</div>"
+   +"<table class=tb><tr><th>Noms / Initiales</th><th>Noms / Initiales</th></tr>"+rangs+"</table>"
+   +"<div class=bas>"
+   +"<div class=par><b>Par</b> (Animateur:coordonnateur SST, contremaitre,<br>surintendant, etc.) :</div>"
+   +"<div class=sig>______________________________</div>"
+   +"<div class=sigl>(Signature)</div>"
+   +"</div></div>"
+   +"<div class=pied><span class=v>V2024/12/09</span><span class=p>Page 147de 210</span></div>"
+   +"</div></body></html>";
 
-  var html="<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'><title>Annexe 16 — Pause-sécurité</title><style>"+CSS+"</style></head><body>"
-   +"<div class='top'><div class='logo'>TISSEUR</div><div class='ppc'>Programme de prévention chantiers de construction</div></div>"
-   +"<h1>Annexe 16 &ndash; Pause-sécurité</h1>"
-   +"<div class='rule'></div>"
-   +"<table class='id'>"
-   +"<tr><td colspan='2' style='width:50%;'>Entrepreneur:</td><td colspan='2' style='width:50%;'>Métier / Occupation :</td></tr>"
-   +"<tr><td style='width:25%;'>Date : "+esc(get("r_date"))+"</td><td style='width:25%;'>Heure :</td>"
-   +"<td colspan='2' style='width:50%;'>Lieu : "+esc(get("r_chantier"))+"</td></tr>"
-   +"</table>"
-   +"<div class='sec'>SUGGESTIONS POUR PAUSES-SÉCURITÉ :</div>"
-   +"<table class='sug'>"+sugRows+"</table>"
-   +"<div class='sec'>SUJETS DISCUTÉS :</div>"
-   +"<div class='bigbox'>"+sujetsHtml+infrBox+"</div>"
-   +"<div class='prestit'>Présences des participants</div>"
-   +"<table class='pres'><tr><th colspan='2'>Noms / Initiales</th><th colspan='2'>Noms / Initiales</th></tr>"+presRows+"</table>"
-   +"<div class='par'>"
-   +"<div style='max-width:52%;'><b>Par</b> (Animateur : coordonnateur SST, contremaitre, surintendant, etc.) :<br>"+esc(get("r_coss"))+"</div>"
-   +"<div class='sigline'><div class='l'>(Signature)</div></div>"
-   +"</div>"
-   +"<div class='foot'>V2024/12/09</div>"
-   +"</body></html>";
+  var titres=sujets.map(function(s){return s.titre;}).join("; ");
+  var im=new Image(); im.onload=im.onerror=function(){};
+  im.src=APPS_URL+"?type=pause&date="+encodeURIComponent(get("r_date"))
+     +"&noComite="+encodeURIComponent(get("r_no"))
+     +"&chantier="+encodeURIComponent(get("r_chantier"))
+     +"&animateur="+encodeURIComponent(get("r_coss"))
+     +"&nbSujets="+sujets.length+"&sujets="+encodeURIComponent(titres);
+  setTimeout(function(){ showToast("Pause envoyée au registre!"); },2500);
 
-  var titresSujets=sujets.map(function(s){return s.titre;}).join("; ");
-  var imgP=new Image(); imgP.onload=imgP.onerror=function(){};
-  imgP.src=APPS_URL+"?type=pause&date="+encodeURIComponent(get("r_date"))+"&noComite="+encodeURIComponent(get("r_no"))+"&chantier="+encodeURIComponent(get("r_chantier"))+"&animateur="+encodeURIComponent(get("r_coss"))+"&nbSujets="+sujets.length+"&sujets="+encodeURIComponent(titresSujets);
-  setTimeout(function(){ showToast("Pause envoyée au registre!"); }, 2500);
-
-  imprimerDoc(html,"Annexe16_Pause_securite_"+get("r_date"));
+  imprimerDoc(h,"Annexe16_Pause_securite_"+get("r_date"));
 }
 
 
