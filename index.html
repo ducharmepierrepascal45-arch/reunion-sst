@@ -753,169 +753,361 @@ function blocSignature(){
 }
 function genPDF(){ var d=construirePV(); imprimerDoc(d.html, d.nom); }
 
-function telechargerWord(contenuHtml, nomFichier){
+
+/* ============================================================
+   Fabrique de vrais fichiers .docx (OOXML) — aucune dependance.
+   Produit des paragraphes, styles et tableaux Word natifs,
+   donc entierement modifiables et reorganisables.
+   ============================================================ */
+var TBL_CRC = (function(){
+  var t = new Uint32Array(256);
+  for(var n=0;n<256;n++){
+    var c = n;
+    for(var k=0;k<8;k++){ c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); }
+    t[n] = c >>> 0;
+  }
+  return t;
+})();
+function crc32(buf){
+  var c = 0xFFFFFFFF;
+  for(var i=0;i<buf.length;i++){ c = TBL_CRC[(c ^ buf[i]) & 0xFF] ^ (c >>> 8); }
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+function utf8(str){
+  if(window.TextEncoder) return new TextEncoder().encode(str);
+  var s = unescape(encodeURIComponent(str)), a = new Uint8Array(s.length);
+  for(var i=0;i<s.length;i++){ a[i]=s.charCodeAt(i); }
+  return a;
+}
+/* ZIP sans compression (methode 0) — Word l'accepte */
+function zipper(fichiers){
+  var morceaux=[], central=[], offset=0;
+  function u16(v){ return [v & 255, (v>>>8) & 255]; }
+  function u32(v){ return [v & 255, (v>>>8) & 255, (v>>>16) & 255, (v>>>24) & 255]; }
+  fichiers.forEach(function(f){
+    var nom = utf8(f.nom), donnees = utf8(f.contenu), crc = crc32(donnees);
+    var entete = [].concat(u32(0x04034b50), u16(20), u16(0x0800), u16(0), u16(0), u16(0),
+                  u32(crc), u32(donnees.length), u32(donnees.length), u16(nom.length), u16(0));
+    morceaux.push(new Uint8Array(entete), nom, donnees);
+    central.push({nom:nom, crc:crc, taille:donnees.length, offset:offset});
+    offset += entete.length + nom.length + donnees.length;
+  });
+  var cdDebut = offset, cd = [];
+  central.forEach(function(e){
+    var h = [].concat(u32(0x02014b50), u16(20), u16(20), u16(0x0800), u16(0), u16(0), u16(0),
+             u32(e.crc), u32(e.taille), u32(e.taille), u16(e.nom.length),
+             u16(0), u16(0), u16(0), u16(0), u32(0), u32(e.offset));
+    cd.push(new Uint8Array(h), e.nom);
+    offset += h.length + e.nom.length;
+  });
+  var fin = new Uint8Array([].concat(u32(0x06054b50), u16(0), u16(0),
+            u16(central.length), u16(central.length), u32(offset-cdDebut), u32(cdDebut), u16(0)));
+  var total = 0, tous = morceaux.concat(cd, [fin]);
+  tous.forEach(function(p){ total += p.length; });
+  var out = new Uint8Array(total), pos = 0;
+  tous.forEach(function(p){ out.set(p, pos); pos += p.length; });
+  return out;
+}
+function xesc(s){
+  return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;")
+         .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+/* Un paragraphe Word. o = {style, gras, italique, taille(demi-points),
+   gauche(indent dxa), avant, apres, couleur, align, bordureBas} */
+function wp(texte, o){
+  o = o || {};
+  var pPr = "<w:pPr>";
+  if(o.style) pPr += "<w:pStyle w:val='"+o.style+"'/>";
+  if(o.gauche) pPr += "<w:ind w:left='"+o.gauche+"'"+(o.pendu?" w:hanging='"+o.pendu+"'":"")+"/>";
+  pPr += "<w:spacing w:before='"+(o.avant||0)+"' w:after='"+(o.apres==null?60:o.apres)+"'/>";
+  if(o.align) pPr += "<w:jc w:val='"+o.align+"'/>";
+  if(o.bordureBas) pPr += "<w:pBdr><w:bottom w:val='single' w:sz='6' w:color='"+(o.bordureBas===true?"000000":o.bordureBas)+"'/></w:pBdr>";
+  var rPr = "<w:rPr>";
+  if(o.gras) rPr += "<w:b/>";
+  if(o.italique) rPr += "<w:i/>";
+  if(o.taille) rPr += "<w:sz w:val='"+o.taille+"'/>";
+  if(o.couleur) rPr += "<w:color w:val='"+o.couleur+"'/>";
+  rPr += "</w:rPr>";
+  if(rPr === "<w:rPr></w:rPr>") rPr = "";
+  pPr += "</w:pPr>";
+  var lignes = String(texte==null?"":texte).split("\n");
+  var runs = "";
+  lignes.forEach(function(l, i){
+    if(i>0) runs += "<w:r>"+rPr+"<w:br/></w:r>";
+    runs += "<w:r>"+rPr+"<w:t xml:space='preserve'>"+xesc(l)+"</w:t></w:r>";
+  });
+  return "<w:p>"+pPr+runs+"</w:p>";
+}
+/* Cellule : contenu = tableau de paragraphes deja formates */
+function wtc(paras, largeur, fond, valign){
+  return "<w:tc><w:tcPr><w:tcW w:w='"+largeur+"' w:type='dxa'/>"
+    + (fond?"<w:shd w:val='clear' w:fill='"+fond+"'/>":"")
+    + "<w:vAlign w:val='"+(valign||"top")+"'/>"
+    + "<w:tcMar><w:top w:w='60' w:type='dxa'/><w:bottom w:w='60' w:type='dxa'/>"
+    + "<w:left w:w='90' w:type='dxa'/><w:right w:w='90' w:type='dxa'/></w:tcMar>"
+    + "</w:tcPr>" + (paras.length?paras.join(""):wp("")) + "</w:tc>";
+}
+function wtbl(largeurs, rangs){
+  var grille = "<w:tblGrid>";
+  largeurs.forEach(function(l){ grille += "<w:gridCol w:w='"+l+"'/>"; });
+  grille += "</w:tblGrid>";
+  var bord = "<w:tblBorders>"
+    + ["top","left","bottom","right","insideH","insideV"].map(function(b){
+        return "<w:"+b+" w:val='single' w:sz='6' w:space='0' w:color='000000'/>"; }).join("")
+    + "</w:tblBorders>";
+  var total = 0; largeurs.forEach(function(l){ total += l; });
+  return "<w:tbl><w:tblPr><w:tblW w:w='"+total+"' w:type='dxa'/>"+bord
+    + "<w:tblLayout w:type='fixed'/></w:tblPr>" + grille + rangs.join("") + "</w:tbl>";
+}
+function wtr(cellules, entete){
+  return "<w:tr>" + (entete?"<w:trPr><w:tblHeader/></w:trPr>":"") + cellules.join("") + "</w:tr>";
+}
+
+function docxOctets(corpsXml){
+  var ct = "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>"
+   + "<Types xmlns='http://schemas.openxmlformats.org/package/2006/content-types'>"
+   + "<Default Extension='rels' ContentType='application/vnd.openxmlformats-package.relationships+xml'/>"
+   + "<Default Extension='xml' ContentType='application/xml'/>"
+   + "<Override PartName='/word/document.xml' ContentType='application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml'/>"
+   + "<Override PartName='/word/styles.xml' ContentType='application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml'/>"
+   + "</Types>";
+  var rels = "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>"
+   + "<Relationships xmlns='http://schemas.openxmlformats.org/package/2006/relationships'>"
+   + "<Relationship Id='rId1' Type='http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument' Target='word/document.xml'/>"
+   + "</Relationships>";
+  var drels = "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>"
+   + "<Relationships xmlns='http://schemas.openxmlformats.org/package/2006/relationships'>"
+   + "<Relationship Id='rId1' Type='http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles' Target='styles.xml'/>"
+   + "</Relationships>";
+  function st(id, nom, o){
+    o = o || {};
+    return "<w:style w:type='paragraph' w:styleId='"+id+"'><w:name w:val='"+nom+"'/>"
+      + "<w:basedOn w:val='Normal'/><w:qFormat/><w:pPr>"
+      + "<w:spacing w:before='"+(o.avant||0)+"' w:after='"+(o.apres||80)+"'/>"
+      + (o.outline!=null?"<w:outlineLvl w:val='"+o.outline+"'/>":"")
+      + "</w:pPr><w:rPr>"+(o.gras?"<w:b/>":"")
+      + "<w:sz w:val='"+(o.taille||20)+"'/>"+(o.couleur?"<w:color w:val='"+o.couleur+"'/>":"")
+      + "</w:rPr></w:style>";
+  }
+  var styles = "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>"
+   + "<w:styles xmlns:w='http://schemas.openxmlformats.org/wordprocessingml/2006/main'>"
+   + "<w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii='Arial' w:hAnsi='Arial' w:cs='Arial'/>"
+   + "<w:sz w:val='20'/></w:rPr></w:rPrDefault>"
+   + "<w:pPrDefault><w:pPr><w:spacing w:after='60' w:line='240' w:lineRule='auto'/></w:pPr></w:pPrDefault>"
+   + "</w:docDefaults>"
+   + "<w:style w:type='paragraph' w:default='1' w:styleId='Normal'><w:name w:val='Normal'/><w:qFormat/></w:style>"
+   + st("Titre1","heading 1",{gras:1,taille:32,outline:0,avant:0,apres:120})
+   + st("Titre2","heading 2",{gras:1,taille:24,outline:1,avant:180,apres:80})
+   + st("Titre3","heading 3",{gras:1,taille:21,outline:2,avant:140,apres:60})
+   + "</w:styles>";
+  var doc = "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>"
+   + "<w:document xmlns:w='http://schemas.openxmlformats.org/wordprocessingml/2006/main'>"
+   + "<w:body>" + corpsXml
+   + "<w:sectPr><w:pgSz w:w='12240' w:h='15840'/>"
+   + "<w:pgMar w:top='1080' w:right='1080' w:bottom='1080' w:left='1080' w:header='720' w:footer='720' w:gutter='0'/>"
+   + "</w:sectPr></w:body></w:document>";
+  return zipper([
+    {nom:"[Content_Types].xml", contenu:ct},
+    {nom:"_rels/.rels", contenu:rels},
+    {nom:"word/_rels/document.xml.rels", contenu:drels},
+    {nom:"word/styles.xml", contenu:styles},
+    {nom:"word/document.xml", contenu:doc}
+  ]);
+}
+function telechargerDocx(corpsXml, nomFichier){
   try{
-    var corps = contenuHtml
-      .replace(/^[\s\S]*?<body[^>]*>/i, "")
-      .replace(/<\/body>[\s\S]*$/i, "");
-    var styles = "";
-    var mS = contenuHtml.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
-    if(mS){ styles = mS[1]; }
-    corps = corps
-      .replace(/<table(?![^>]*\bborder=)/gi,
-        "<table border='1' cellspacing='0' cellpadding='3' width='100%' "
-        +"style='width:100%;table-layout:fixed;border-collapse:collapse;'>"
-        +"<colgroup><col width='8%'><col width='6%'><col width='62%'><col width='12%'><col width='12%'></colgroup"
-      )
-      .replace(/<img\b/gi, "<img border='0'");
-    var doc = "<html xmlns:o='urn:schemas-microsoft-com:office:office' "
-      + "xmlns:w='urn:schemas-microsoft-com:office:word' "
-      + "xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'>"
-      + "<title>" + nomFichier + "</title>"
-      + "<!--[if gte mso 9]><xml><w:WordDocument>"
-      + "<w:View>Print</w:View><w:Zoom>100</w:Zoom><w:DoNotOptimizeForBrowser/>"
-      + "</w:WordDocument></xml><![endif]-->"
-      + "<style>@page{size:8.5in 11in;mso-page-orientation:portrait;margin:1.4cm 1.2cm;}"
-      + "body{font-family:Arial,sans-serif;padding:0 !important;width:auto !important;}"
-      + "table{width:100% !important;table-layout:fixed;border-collapse:collapse;}"
-      + "td,th{word-wrap:break-word;overflow-wrap:break-word;}"
-      + "ul{margin:2px 0 2px 14px;padding:0;} li{margin-bottom:2px;}"
-      + styles + "</style></head><body>"
-      + corps + "</body></html>";
-    var blob = new Blob(["\ufeff", doc], {type:"application/msword"});
+    var blob = new Blob([docxOctets(corpsXml)],
+      {type:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
     var a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = nomFichier + ".doc";
+    a.download = nomFichier + ".docx";
     document.body.appendChild(a); a.click();
     setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1500);
-    showToast("Word telecharge - ouvrez-le pour ajouter vos notes");
-  }catch(e){ showToast("Telechargement Word impossible sur cet appareil"); }
+    showToast("Word telecharge — texte et tableaux entierement modifiables");
+  }catch(e){ showToast("Telechargement impossible : "+e.message); }
 }
 
+/* ─────────── Proces-verbal en .docx ─────────── */
 function genPVWord(){
-  var d = construirePV();
-  var zoneNotes = "<div style='margin-top:22px;page-break-inside:avoid;'>"
-   + "<div style='font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;"
-   + "border-bottom:1px solid #000;padding-bottom:3px;margin-bottom:6px;'>Notes de la r\u00e9union</div>"
-   + "<div style='font-size:11px;color:#666;font-style:italic;margin-bottom:8px;'>"
-   + "Ajoutez ici les pr\u00e9cisions, interventions et d\u00e9cisions prises pendant la rencontre.</div>";
-  for(var i=0;i<10;i++){ zoneNotes += "<div style=\'border-bottom:1px solid #bbb;height:20px;\'></div>"; }
-  zoneNotes += "</div>";
-  var html = d.html.replace("</body>", zoneNotes + "</body>");
-  telechargerWord(html, d.nom);
+  var get=function(id){var e=document.getElementById(id);return e?e.value:"";};
+  var noReu=get("r_no")||"—", art=1, reu=noReu, x="";
+
+  x += wp("TISSEUR", {gras:1, taille:36, apres:0});
+  x += wp("Programme de prévention chantiers de construction",
+          {taille:16, couleur:"666666", apres:120, bordureBas:true});
+  x += wp("Comité de chantier no."+noReu, {style:"Titre1", align:"center"});
+  x += wp("Date : "+get("r_date")+"   —   Lieu : "+get("r_lieu")+"   —   Heure : "+get("r_heure"), {taille:19, apres:20});
+  x += wp("Chantier : "+get("r_chantier")+"   —   Maître d'oeuvre : "+get("r_mo"), {taille:19, apres:100});
+  x += wp("Le présent compte rendu est un résumé fidèle des discussions et des décisions prises lors de la réunion "
+        + "de chantier ci-haut mentionnée. Tout commentaire ou correction à apporter aux minutes de la réunion, devra "
+        + "être faite dans les 4 jours suivants sa réception, sinon elles seront réputées justes et acceptées.",
+          {taille:16, italique:1, couleur:"555555", apres:160});
+
+  var L = [760, 560, 5800, 1120, 1120];
+  var rangs = [ wtr([
+    wtc([wp("Réunion",{gras:1,taille:17,couleur:"FFFFFF",apres:0,align:"center"})], L[0], "1A1A1A"),
+    wtc([wp("Art",{gras:1,taille:17,couleur:"FFFFFF",apres:0,align:"center"})], L[1], "1A1A1A"),
+    wtc([wp("Description",{gras:1,taille:17,couleur:"FFFFFF",apres:0,align:"center"})], L[2], "1A1A1A"),
+    wtc([wp("Action par :",{gras:1,taille:17,couleur:"FFFFFF",apres:0,align:"center"})], L[3], "1A1A1A"),
+    wtc([wp("Suivi",{gras:1,taille:17,couleur:"FFFFFF",apres:0,align:"center"})], L[4], "1A1A1A")
+  ], true) ];
+
+  function ligne(titre, paras, action, suivi){
+    var desc = [ wp(titre, {gras:1, taille:19, apres:40}) ].concat(paras);
+    rangs.push( wtr([
+      wtc([wp(reu,{taille:17,align:"center",apres:0})], L[0], null, "center"),
+      wtc([wp(art<10?"0"+art:String(art),{taille:17,align:"center",apres:0})], L[1], null, "center"),
+      wtc(desc, L[2]),
+      wtc([wp(action||"",{taille:17,align:"center",apres:0})], L[3], null, "center"),
+      wtc([wp(suivi||"",{taille:17,align:"center",apres:0})], L[4], null, "center")
+    ]) );
+    art++;
+  }
+
+  D.procedure.forEach(function(p){
+    ligne(p.titre, [wp(p.texte,{taille:18,apres:0})], get("act_"+art), get("suivi_"+art));
+  });
+
+  D.sujets.forEach(function(s,i){
+    if(!sujetSel[i]) return;
+    var titreMod = get("stitre_"+art) || (s.titre+" — "+s.ref);
+    var pm = get("spoints_"+art);
+    var pts = pm ? pm.split("\n").filter(function(l){return l.trim();}) : s.points;
+    var paras = pts.map(function(pt){
+      return wp("•  "+pt, {taille:18, gauche:280, pendu:160, apres:30});
+    });
+    paras.push(wp(D.pause, {taille:16, italique:1, couleur:"555555", avant:60, apres:0}));
+    ligne(titreMod, paras, get("act_"+art), get("suivi_"+art));
+  });
+
+  D.procedure_fin.forEach(function(p){
+    var txt = get("txt_"+art), paras = [];
+    if(p.type==="oui_non"){
+      var ta = document.getElementById("txt_"+art);
+      var repNon = ta && ta.dataset.repNon==="1";
+      paras.push(wp((repNon||!txt) ? p.texte_non : txt, {taille:18, apres:0}));
+    } else if(p.type==="varia"){
+      if(txt) paras.push(wp(txt, {taille:18, apres:40}));
+      var nl = p.lignes_notes || 6;
+      for(var z=0; z<nl; z++){ paras.push(wp("", {taille:18, apres:40, bordureBas:"BBBBBB"})); }
+    } else {
+      paras.push(wp(txt || p.texte || "", {taille:18, apres:0}));
+    }
+    ligne(p.titre, paras, get("act_"+art), get("suivi_"+art));
+  });
+
+  x += wtbl(L, rangs);
+
+  x += wp("Veuillez prendre note que si des modifications doivent être apportées à ce document, vous devrez aviser "
+        + "le responsable par écrit dans un délai de 24 heures de la date de transmission, faute de quoi le présent "
+        + "document deviendra officiel et liera les parties.",
+          {taille:16, italique:1, couleur:"555555", avant:160, apres:160});
+  x += wp("Remarques : "+get("r_remarques"), {taille:19, apres:60});
+  x += wp("Prochaine réunion : "+get("r_prochaine"), {taille:19, gras:1, apres:60});
+  x += wp("Compte rendu rédigé par : "+get("r_coss"), {taille:19, apres:200});
+
+  x += wp("SIGNATURE DE L'AGENT DE PRÉVENTION", {style:"Titre3", taille:18, bordureBas:true, avant:120});
+  x += wp("", {apres:400});
+  x += wp(get("r_coss"), {taille:19, apres:0, bordureBas:true});
+  x += wp("Coordonnateur santé et sécurité (CoSS)   ·   "+get("r_date"), {taille:16, couleur:"555555", apres:240});
+
+  x += wp("NOTES DE LA RÉUNION", {style:"Titre3", taille:18, bordureBas:true});
+  x += wp("Ajoutez ici les précisions, interventions et décisions prises pendant la rencontre.",
+          {taille:16, italique:1, couleur:"777777", apres:100});
+  for(var z=0; z<12; z++){ x += wp("", {taille:19, apres:60, bordureBas:"BBBBBB"}); }
+
+  telechargerDocx(x, "Proces_verbal_comite_"+noReu+"_"+get("r_date"));
 }
 
-function pauseWordHtml(){
+/* ─────────── Pause securite (Annexe 16) en .docx ─────────── */
+function genPauseWord(){
   var get=function(id){var e=document.getElementById(id);return e?e.value:"";};
-  var esc=function(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");};
-
   var artStart=D.procedure.length+1, art=artStart, sujets=[];
   D.sujets.forEach(function(s,i){
     if(!sujetSel[i]) return;
-    var t=get("stitre_"+art);
-    if(!t) t=s.titre;
+    var t=get("stitre_"+art)||s.titre;
     var pm=get("spoints_"+art);
     var pts=pm?pm.split("\n").filter(function(l){return l.trim();}):s.points;
     sujets.push({titre:t, ref:s.ref||"", points:pts});
     art++;
   });
-  if(sujets.length===0){ showToast("Choisissez au moins un sujet a l'etape Sujets"); return null; }
+  if(sujets.length===0){ showToast("Choisissez au moins un sujet à l'étape Sujets"); return; }
 
-  var n=0, corps="";
-  sujets.forEach(function(s){
-    n++;
-    var t=esc(s.titre);
-    if(s.ref && s.titre.indexOf(s.ref)<0){ t+= " <span style='font-weight:400;font-size:8.5pt'>("+esc(s.ref)+")</span>"; }
-    corps+="<p style='margin:0 0 2pt 0;font-size:9.5pt;font-weight:700;'>"+n+". "+t+"</p>";
-    (s.points||[]).forEach(function(p){
-      corps+="<p style='margin:0 0 2pt 12pt;font-size:9pt;'>&bull;&nbsp;&nbsp;"+esc(p)+"</p>";
-    });
-    corps+="<p style='margin:0 0 6pt 0;font-size:1pt;'>&nbsp;</p>";
+  var x = "";
+  x += wp("TISSEUR", {gras:1, taille:34, apres:0});
+  x += wp("Programme de prévention chantiers de construction", {taille:15, couleur:"808080", apres:80});
+  x += wp("Annexe 16 – Pause-sécurité", {gras:1, taille:31, align:"center", couleur:"212121",
+          apres:120, bordureBas:"326836"});
+
+  var M = [2340, 2340, 2340, 2340];
+  x += wtbl(M, [
+    wtr([ wtc([wp("Entrepreneur :",{gras:1,taille:19,apres:200})], 4680), 
+          wtc([wp("Métier / Occupation :",{gras:1,taille:19,apres:200})], 4680) ]),
+    wtr([ wtc([wp("Date :",{gras:1,taille:19,apres:200})], 2340),
+          wtc([wp("Heure :",{gras:1,taille:19,apres:200})], 2340),
+          wtc([wp("Lieu :",{gras:1,taille:19,apres:200})], 4680) ])
+  ]);
+
+  x += wp("SUGGESTIONS POUR PAUSES-SÉCURITÉ :", {gras:1, taille:21, avant:200, apres:100});
+  var sug=[["Protection individuelle","Outils"],["Garde-corps","Périmètres de sécurité"],
+           ["Appareils de levage","Tenue des lieux"],["Protection d'incendie","Bouteilles de gaz comprimé"],
+           ["Échafaudages","Échelles et escabeaux"],["Équipements","Autres"]];
+  sug.forEach(function(r){
+    x += wp(r[0]+" : ______________________________          "+r[1]+" : ______________________________",
+            {taille:18, apres:80});
   });
 
+  x += wp("SUJETS DISCUTÉS :", {gras:1, taille:21, avant:200, apres:100});
+
+  var n=0, dedans=[];
+  sujets.forEach(function(s){
+    n++;
+    var t = s.titre + ((s.ref && s.titre.indexOf(s.ref)<0) ? "  ("+s.ref+")" : "");
+    dedans.push(wp(n+". "+t, {gras:1, taille:19, avant:(n>1?120:0), apres:40}));
+    (s.points||[]).forEach(function(p){
+      dedans.push(wp("•  "+p, {taille:18, gauche:280, pendu:160, apres:30}));
+    });
+  });
   var infr=(D.infractions||[]).filter(function(_,i){return infrSel[i];});
   if(infr.length===0) infr=(D.infractions||[]).slice(0,6);
   var dev=D.infr_dev||{};
   n++;
-  corps+="<p style='margin:0 0 2pt 0;font-size:9.5pt;font-weight:700;'>"+n+". Infractions les plus fr&eacute;quentes</p>";
-  corps+="<p style='margin:0 0 3pt 12pt;font-size:9pt;'>"+esc(get("pause_bilan")||D.bilan_defaut)+"</p>";
-  infr.forEach(function(x){ corps+="<p style='margin:0 0 2pt 12pt;font-size:9pt;'>&bull;&nbsp;&nbsp;"+esc(x)+"</p>"; });
+  dedans.push(wp(n+". Infractions les plus fréquentes", {gras:1, taille:19, avant:120, apres:40}));
+  dedans.push(wp(get("pause_bilan")||D.bilan_defaut, {taille:18, gauche:160, apres:50}));
+  infr.forEach(function(i2){ dedans.push(wp("•  "+i2, {taille:18, gauche:280, pendu:160, apres:30})); });
   if(dev.contremaitres&&dev.contremaitres.length){
-    corps+="<p style='margin:4pt 0 2pt 4pt;font-size:8.8pt;font-weight:700;'>Ce qui est attendu des contrema&icirc;tres</p>";
-    dev.contremaitres.forEach(function(x){ corps+="<p style='margin:0 0 2pt 12pt;font-size:9pt;'>&bull;&nbsp;&nbsp;"+esc(x)+"</p>"; });
+    dedans.push(wp("Ce qui est attendu des contremaîtres", {gras:1, taille:17, gauche:120, avant:80, apres:30}));
+    dev.contremaitres.forEach(function(i2){ dedans.push(wp("•  "+i2, {taille:18, gauche:280, pendu:160, apres:30})); });
   }
   if(dev.travailleurs&&dev.travailleurs.length){
-    corps+="<p style='margin:4pt 0 2pt 4pt;font-size:8.8pt;font-weight:700;'>Ce qui est attendu des travailleurs</p>";
-    dev.travailleurs.forEach(function(x){ corps+="<p style='margin:0 0 2pt 12pt;font-size:9pt;'>&bull;&nbsp;&nbsp;"+esc(x)+"</p>"; });
+    dedans.push(wp("Ce qui est attendu des travailleurs", {gras:1, taille:17, gauche:120, avant:80, apres:30}));
+    dev.travailleurs.forEach(function(i2){ dedans.push(wp("•  "+i2, {taille:18, gauche:280, pendu:160, apres:30})); });
   }
-  corps+="<p style='margin:4pt 0 2pt 4pt;font-size:8.8pt;font-weight:700;'>Politique de s&eacute;curit&eacute; du chantier</p>";
-  corps+="<p style='margin:0 0 2pt 12pt;font-size:9pt;'>"+esc(D.politique)+"</p>";
+  dedans.push(wp("Politique de sécurité du chantier", {gras:1, taille:17, gauche:120, avant:80, apres:30}));
+  dedans.push(wp(D.politique, {taille:18, gauche:160, apres:0}));
 
-  var sug=[["Protection individuelle","Outils"],["Garde-corps","P&eacute;rim&egrave;tres de s&eacute;curit&eacute;"],
-           ["Appareils de levage","Tenue des lieux"],["Protection d'incendie","Bouteilles de gaz comprim&eacute;"],
-           ["&Eacute;chafaudages","&Eacute;chelles et escabeaux"],["&Eacute;quipements","Autres"]];
-  var sugHtml="";
-  sug.forEach(function(r){
-    sugHtml+="<tr>"
-      +"<td style='padding:2pt 0;font-size:9.3pt;border:none;'>"+r[0]+" : ______________________________</td>"
-      +"<td style='padding:2pt 0;font-size:9.3pt;border:none;'>"+r[1]+" : ______________________________</td></tr>";
-  });
+  x += wtbl([9360], [ wtr([ wtc(dedans, 9360) ]) ]);
 
-  var pres="";
+  x += wp("Présences des participants", {gras:1, taille:21, align:"center", avant:200, apres:100});
+  var pr = [ wtr([
+    wtc([wp("Noms / Initiales",{gras:1,taille:19,align:"center",apres:0})], 4680),
+    wtc([wp("Noms / Initiales",{gras:1,taille:19,align:"center",apres:0})], 4680)
+  ], true) ];
   for(var i=1;i<=6;i++){
-    pres+="<tr>"
-     +"<td style='border:1px solid #000;height:19pt;font-size:9.7pt;padding:2pt 5pt;width:50%;'>"+i+".</td>"
-     +"<td style='border:1px solid #000;height:19pt;font-size:9.7pt;padding:2pt 5pt;width:50%;'>"+(i+6)+".</td></tr>";
+    pr.push( wtr([
+      wtc([wp(i+".",{taille:19,apres:120})], 4680),
+      wtc([wp((i+6)+".",{taille:19,apres:120})], 4680)
+    ]) );
   }
+  x += wtbl([4680,4680], pr);
 
-  var h=""
-   +"<table width='100%' cellspacing='0' cellpadding='0' style='border-collapse:collapse;border:none;'><tr>"
-   +"<td style='border:none;vertical-align:top;'><img src=\"data:image/png;base64,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\" width='169' height='20' border='0'></td>"
-   +"<td style='border:none;text-align:right;vertical-align:top;font-size:8pt;color:#808080;'>"
-   +"<u>Programme de pr&eacute;vention chantiers de construction</u></td></tr></table>"
-   +"<p style='text-align:center;font-size:15pt;font-weight:700;color:#212121;margin:8pt 0 5pt 0;'>Annexe 16 &ndash; Pause-s&eacute;curit&eacute;</p>"
-   +"<table width='100%' cellspacing='0' cellpadding='0' style='border-collapse:collapse;margin-bottom:9pt;'><tr>"
-   +"<td style='border:none;border-bottom:2.5pt solid #326836;'></td></tr></table>"
+  x += wp("Par (Animateur : coordonnateur SST, contremaitre, surintendant, etc.) :",
+          {taille:18, avant:240, apres:400});
+  x += wp("______________________________          (Signature)", {taille:19, apres:200});
+  x += wp("V2024/12/09   Page 147 de 210", {taille:15, couleur:"808080", align:"right"});
 
-   +"<table width='100%' cellspacing='0' cellpadding='0' border='1' style='border-collapse:collapse;'>"
-   +"<tr><td colspan='2' style='border:1px solid #000;height:26pt;padding:4pt 6pt;font-size:9.5pt;font-weight:700;width:50%;'>Entrepreneur:</td>"
-   +"<td colspan='2' style='border:1px solid #000;height:26pt;padding:4pt 6pt;font-size:9.5pt;font-weight:700;width:50%;'>M&eacute;tier / Occupation:</td></tr>"
-   +"<tr><td style='border:1px solid #000;height:26pt;padding:4pt 6pt;font-size:9.5pt;font-weight:700;width:25%;'>Date:</td>"
-   +"<td style='border:1px solid #000;height:26pt;padding:4pt 6pt;font-size:9.5pt;font-weight:700;width:25%;'>Heure:</td>"
-   +"<td colspan='2' style='border:1px solid #000;height:26pt;padding:4pt 6pt;font-size:9.5pt;font-weight:700;width:50%;'>Lieu:</td></tr>"
-   +"</table>"
-
-   +"<p style='font-size:10.2pt;font-weight:700;margin:12pt 0 7pt 0;'>SUGGESTIONS POUR PAUSES-S&Eacute;CURIT&Eacute; :</p>"
-   +"<table width='100%' cellspacing='0' cellpadding='0' style='border-collapse:collapse;border:none;'>"+sugHtml+"</table>"
-
-   +"<p style='font-size:10.5pt;font-weight:700;margin:14pt 0 5pt 0;'>SUJETS DISCUT&Eacute;S:</p>"
-   +"<table width='100%' cellspacing='0' cellpadding='0' border='1' style='border-collapse:collapse;'>"
-   +"<tr><td style='border:1px solid #000;padding:7pt 9pt;'>"+corps+"</td></tr></table>"
-
-   +"<p style='text-align:center;font-size:10.4pt;font-weight:700;margin:11pt 0 7pt 0;'>Pr&eacute;sences des participants</p>"
-   +"<table width='100%' cellspacing='0' cellpadding='0' border='1' style='border-collapse:collapse;'>"
-   +"<tr><td style='border:1px solid #000;height:21pt;font-size:9.7pt;font-weight:700;text-align:center;'>Noms / Initiales</td>"
-   +"<td style='border:1px solid #000;height:21pt;font-size:9.7pt;font-weight:700;text-align:center;'>Noms / Initiales</td></tr>"
-   +pres+"</table>"
-
-   +"<table width='100%' cellspacing='0' cellpadding='0' style='border-collapse:collapse;border:none;margin-top:14pt;'><tr>"
-   +"<td style='border:none;vertical-align:top;width:52%;font-size:8.9pt;'>"
-   +"<b>Par</b> (Animateur:coordonnateur SST, contremaitre,<br>surintendant, etc.) :</td>"
-   +"<td style='border:none;vertical-align:top;width:48%;text-align:center;font-size:9.7pt;'>"
-   +"______________________________<br>(Signature)</td></tr></table>"
-
-   +"<p style='text-align:right;font-size:8pt;color:#808080;margin-top:16pt;'>"
-   +"V2024/12/09&nbsp;&nbsp;<span style='font-size:11pt;'>Page 147de 210</span></p>";
-
-  return {html:"<html><body>"+h+"</body></html>",
-          nom:"Annexe16_Pause_securite_"+get("r_date")};
+  telechargerDocx(x, "Annexe16_Pause_securite_"+get("r_date"));
 }
-
-function genPauseWord(){
-  var d = pauseWordHtml();
-  if(d){ telechargerWord(d.html, d.nom); }
-}
-
 
 function construirePV() {
   var get=function(id){var e=document.getElementById(id);return e?e.value:"";};
