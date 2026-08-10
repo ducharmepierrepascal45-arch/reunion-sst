@@ -214,12 +214,12 @@ canvas.sig{border:2px solid var(--gris-brd);width:100%;background:#FAFAFA;touch-
     </div>
   </div>
   <div style="margin-bottom:10px;">
-    <button class="btn-pause" onclick="genPauseSecurite()" style="width:100%;background:#7A3C00;color:#fff;border:none;padding:14px;font-size:14px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;">🦺 Générer la pause sécurité (toolbox)</button>
+    <button class="btn-pause" onclick="genPauseSecurite()" style="width:100%;background:#7A3C00;color:#fff;border:none;padding:14px;font-size:14px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;">🦺 Pause sécurité — PDF</button><button class="btn-pause" onclick="genPauseWord()" style="width:100%;background:#1F4E79;color:#fff;border:none;padding:12px;font-size:13px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;margin-top:6px;">📝 Pause sécurité — Word</button>
     <p style="font-size:11px;color:#666;margin-top:6px;text-align:center;line-height:1.4;">Crée le document à remettre aux travailleurs, basé sur les sujets choisis dans le comité.</p>
   </div>
   <div class="nav-btns">
     <button class="btn-prev" onclick="goPage(3)">← Retour</button>
-    <button class="btn-pdf" onclick="genPDF()">📄 PV PDF</button>
+    <button class="btn-pdf" onclick="genPDF()">📄 PV PDF</button><button class="btn-pdf" onclick="genPVWord()" style="background:#1F4E79;">📝 PV Word</button>
     <button class="btn-sub" id="btn-sub" onclick="soumettre()">📤 Enregistrer</button>
   </div>
 </div>
@@ -492,7 +492,6 @@ function chargerPresences() {
 }
 
 // ── SIGNATURE ──
-var sigCtx={}, sigOn={};
 function initSig(id){
   var cv=document.getElementById(id); if(!cv||cv.dataset.init) return;
   cv.dataset.init="1";
@@ -505,6 +504,8 @@ function initSig(id){
   cv.addEventListener("mousedown",function(e){sigOn[id]=true;var p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);e.preventDefault();});
   cv.addEventListener("mousemove",function(e){if(!sigOn[id])return;var p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke();e.preventDefault();});
   cv.addEventListener("mouseup",function(){sigOn[id]=false;});
+  window.addEventListener("mouseup",function(){sigOn[id]=false;});
+  cv.addEventListener("mouseleave",function(){sigOn[id]=false;});
   cv.addEventListener("touchstart",function(e){sigOn[id]=true;var p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);e.preventDefault();},{passive:false});
   cv.addEventListener("touchmove",function(e){if(!sigOn[id])return;var p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke();e.preventDefault();},{passive:false});
   cv.addEventListener("touchend",function(){sigOn[id]=false;});
@@ -625,7 +626,7 @@ function genPauseSecurite() {
   sujets.forEach(function(s){
     n++;
     corps+="<div class=s><div class=st>"+n+". "+esc(s.titre)
-         +(s.ref?"  <span class=sr>("+esc(s.ref)+")</span>":"")+"</div>";
+         +((s.ref && s.titre.indexOf(s.ref)<0)?"  <span class=sr>("+esc(s.ref)+")</span>":"")+"</div>";
     (s.points||[]).forEach(function(p){ corps+="<div class=sp>&bull;  "+esc(p)+"</div>"; });
     corps+="</div>";
   });
@@ -656,10 +657,6 @@ function genPauseSecurite() {
    +"<img class=logo alt='TISSEUR' src=\"data:image/png;base64,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\">"
    +"<div class=filet></div><div class=tiret></div>"
    +"<div class=ab style=\"left:350.88pt;top:49.99pt;font-size:8.17pt;color:#808080\">Programme de prévention chantiers de construction</div>\n<div class=ab style=\"left:203.52pt;top:76.95pt;font-size:15.08pt;color:#212121;font-weight:700\">Annexe 16</div>\n<div class=ab style=\"left:298.08pt;top:76.94pt;font-size:15.30pt;color:#212121;font-weight:700\">Pause-sécurité</div>\n<div class=ab style=\"left:77.76pt;top:132.57pt;font-size:9.19pt;color:#000;font-weight:700\">Entrepreneur:</div>\n<div class=ab style=\"left:294.00pt;top:132.55pt;font-size:9.83pt;color:#000;font-weight:700\">Métier / Occupation:</div>\n<div class=ab style=\"left:77.76pt;top:161.58pt;font-size:10.33pt;color:#000;font-weight:700\">Date:</div>\n<div class=ab style=\"left:185.76pt;top:161.59pt;font-size:10.13pt;color:#000;font-weight:700\">Heure:</div>\n<div class=ab style=\"left:294.00pt;top:161.59pt;font-size:10.21pt;color:#000;font-weight:700\">Lieu:</div>\n<div class=ab style=\"left:72.00pt;top:186.63pt;font-size:10.20pt;color:#000;font-weight:700\">SUGGESTIONS POUR PAUSES-SÉCURITÉ :</div>\n<div class=ab style=\"left:72.00pt;top:350.54pt;font-size:10.55pt;color:#000;font-weight:700\">SUJETS DISCUTÉS:</div>\n<div class=ab style=\"left:72.00pt;top:218.23pt;font-size:9.84pt\">Protection individuelle: _________________</div>\n<div class=ab style=\"left:320.16pt;top:218.23pt;font-size:9.84pt\">Outils: ____________________________</div>\n<div class=ab style=\"left:72.00pt;top:237.43pt;font-size:9.84pt\">Garde-corps: ___________________________</div>\n<div class=ab style=\"left:320.16pt;top:237.43pt;font-size:9.84pt\">Périmètres de sécurité: ________________</div>\n<div class=ab style=\"left:72.00pt;top:256.63pt;font-size:9.84pt\">Appareils de levage: ______________________</div>\n<div class=ab style=\"left:320.16pt;top:256.63pt;font-size:9.84pt\">Tenue des lieux: _____________________</div>\n<div class=ab style=\"left:72.00pt;top:275.83pt;font-size:9.84pt\">Protection d'incendie:_____________________</div>\n<div class=ab style=\"left:320.16pt;top:275.83pt;font-size:9.84pt\">Bouteilles de gaz comprimé: _____________</div>\n<div class=ab style=\"left:72.00pt;top:294.79pt;font-size:9.84pt\">Échafaudages:__________________________</div>\n<div class=ab style=\"left:320.16pt;top:294.79pt;font-size:9.84pt\">Échelles et escabeaux:_________________</div>\n<div class=ab style=\"left:72.00pt;top:313.99pt;font-size:9.84pt\">Équipements:__________________________</div>\n<div class=ab style=\"left:320.16pt;top:313.99pt;font-size:9.84pt\">Autres:____________________________</div>\n<div class=ln style=\"left:72.48pt;top:115.68pt;width:465.84pt;height:0.72pt\"></div>\n<div class=ln style=\"left:72.48pt;top:144.48pt;width:465.84pt;height:0.96pt\"></div>\n<div class=ln style=\"left:72.48pt;top:173.52pt;width:465.84pt;height:0.72pt\"></div>\n<div class=ln style=\"left:72.00pt;top:116.16pt;width:0.72pt;height:57.60pt\"></div>\n<div class=ln style=\"left:288.24pt;top:116.16pt;width:0.96pt;height:57.60pt\"></div>\n<div class=ln style=\"left:538.08pt;top:116.16pt;width:0.72pt;height:57.60pt\"></div>\n<div class=ln style=\"left:180.00pt;top:145.20pt;width:0.96pt;height:28.56pt\"></div>"
-   +"<div class=ab style=\"left:146.00pt;top:132.55pt;font-size:9.84pt;font-weight:400\">"+esc(get("r_mo"))+"</div>"
-   +"<div class=ab style=\"left:106.00pt;top:161.59pt;font-size:9.84pt;font-weight:400\">"+esc(get("r_date"))+"</div>"
-   +"<div class=ab style=\"left:221.00pt;top:161.59pt;font-size:9.84pt;font-weight:400\">"+esc(get("r_heure"))+"</div>"
-   +"<div class=ab style=\"left:321.00pt;top:161.59pt;font-size:9.84pt;font-weight:400\">"+esc(get("r_chantier"))+"</div>"
    +"<div class=flux>"
    +"<div class=boite>"+corps+"</div>"
    +"<div class=pres>Présences des participants</div>"
@@ -735,7 +732,192 @@ function imprimerPresences() {
   imprimerDoc(pdfHtml, "Presence_comite_"+get("r_no")+"_"+get("r_date"));
 }
 
-function genPDF() {
+function imageSignature(id){
+  var cv=document.getElementById(id);
+  if(!cv||!hasSig(id)) return "";
+  try{ return cv.toDataURL("image/png"); }catch(e){ return ""; }
+}
+function blocSignature(){
+  var img=imageSignature("sig_coss");
+  var nom=(document.getElementById("r_coss")||{}).value||"";
+  var d=(document.getElementById("r_date")||{}).value||"";
+  var s="<div style='margin-top:26px;page-break-inside:avoid;'>"
+   +"<div style='font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;'>Signature de l'agent de prévention</div>";
+  if(img){ s+="<img src='"+img+"' style='display:block;height:62px;margin-bottom:2px;'>"; }
+  else   { s+="<div style='height:62px;'></div>"; }
+  s+="<div style='border-top:1px solid #000;width:270px;padding-top:3px;font-size:11px;'>"
+   +(nom||"&nbsp;")+"</div>"
+   +"<div style='font-size:10px;color:#555;margin-top:2px;'>Coordonnateur santé et sécurité (CoSS)"
+   +(d?" &nbsp;·&nbsp; "+d:"")+"</div></div>";
+  return s;
+}
+function genPDF(){ var d=construirePV(); imprimerDoc(d.html, d.nom); }
+
+function telechargerWord(contenuHtml, nomFichier){
+  try{
+    var corps = contenuHtml
+      .replace(/^[\s\S]*?<body[^>]*>/i, "")
+      .replace(/<\/body>[\s\S]*$/i, "");
+    var styles = "";
+    var mS = contenuHtml.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
+    if(mS){ styles = mS[1]; }
+    corps = corps
+      .replace(/<table(?![^>]*\bborder=)/gi,
+        "<table border='1' cellspacing='0' cellpadding='3' width='100%' "
+        +"style='width:100%;table-layout:fixed;border-collapse:collapse;'>"
+        +"<colgroup><col width='8%'><col width='6%'><col width='62%'><col width='12%'><col width='12%'></colgroup"
+      )
+      .replace(/<img\b/gi, "<img border='0'");
+    var doc = "<html xmlns:o='urn:schemas-microsoft-com:office:office' "
+      + "xmlns:w='urn:schemas-microsoft-com:office:word' "
+      + "xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'>"
+      + "<title>" + nomFichier + "</title>"
+      + "<!--[if gte mso 9]><xml><w:WordDocument>"
+      + "<w:View>Print</w:View><w:Zoom>100</w:Zoom><w:DoNotOptimizeForBrowser/>"
+      + "</w:WordDocument></xml><![endif]-->"
+      + "<style>@page{size:8.5in 11in;mso-page-orientation:portrait;margin:1.4cm 1.2cm;}"
+      + "body{font-family:Arial,sans-serif;padding:0 !important;width:auto !important;}"
+      + "table{width:100% !important;table-layout:fixed;border-collapse:collapse;}"
+      + "td,th{word-wrap:break-word;overflow-wrap:break-word;}"
+      + "ul{margin:2px 0 2px 14px;padding:0;} li{margin-bottom:2px;}"
+      + styles + "</style></head><body>"
+      + corps + "</body></html>";
+    var blob = new Blob(["\ufeff", doc], {type:"application/msword"});
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = nomFichier + ".doc";
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+    showToast("Word telecharge - ouvrez-le pour ajouter vos notes");
+  }catch(e){ showToast("Telechargement Word impossible sur cet appareil"); }
+}
+
+function genPVWord(){
+  var d = construirePV();
+  var zoneNotes = "<div style='margin-top:22px;page-break-inside:avoid;'>"
+   + "<div style='font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;"
+   + "border-bottom:1px solid #000;padding-bottom:3px;margin-bottom:6px;'>Notes de la r\u00e9union</div>"
+   + "<div style='font-size:11px;color:#666;font-style:italic;margin-bottom:8px;'>"
+   + "Ajoutez ici les pr\u00e9cisions, interventions et d\u00e9cisions prises pendant la rencontre.</div>";
+  for(var i=0;i<10;i++){ zoneNotes += "<div style=\'border-bottom:1px solid #bbb;height:20px;\'></div>"; }
+  zoneNotes += "</div>";
+  var html = d.html.replace("</body>", zoneNotes + "</body>");
+  telechargerWord(html, d.nom);
+}
+
+function pauseWordHtml(){
+  var get=function(id){var e=document.getElementById(id);return e?e.value:"";};
+  var esc=function(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");};
+
+  var artStart=D.procedure.length+1, art=artStart, sujets=[];
+  D.sujets.forEach(function(s,i){
+    if(!sujetSel[i]) return;
+    var t=get("stitre_"+art);
+    if(!t) t=s.titre;
+    var pm=get("spoints_"+art);
+    var pts=pm?pm.split("\n").filter(function(l){return l.trim();}):s.points;
+    sujets.push({titre:t, ref:s.ref||"", points:pts});
+    art++;
+  });
+  if(sujets.length===0){ showToast("Choisissez au moins un sujet a l'etape Sujets"); return null; }
+
+  var n=0, corps="";
+  sujets.forEach(function(s){
+    n++;
+    var t=esc(s.titre);
+    if(s.ref && s.titre.indexOf(s.ref)<0){ t+= " <span style='font-weight:400;font-size:8.5pt'>("+esc(s.ref)+")</span>"; }
+    corps+="<p style='margin:0 0 2pt 0;font-size:9.5pt;font-weight:700;'>"+n+". "+t+"</p>";
+    (s.points||[]).forEach(function(p){
+      corps+="<p style='margin:0 0 2pt 12pt;font-size:9pt;'>&bull;&nbsp;&nbsp;"+esc(p)+"</p>";
+    });
+    corps+="<p style='margin:0 0 6pt 0;font-size:1pt;'>&nbsp;</p>";
+  });
+
+  var infr=(D.infractions||[]).filter(function(_,i){return infrSel[i];});
+  if(infr.length===0) infr=(D.infractions||[]).slice(0,6);
+  var dev=D.infr_dev||{};
+  n++;
+  corps+="<p style='margin:0 0 2pt 0;font-size:9.5pt;font-weight:700;'>"+n+". Infractions les plus fr&eacute;quentes</p>";
+  corps+="<p style='margin:0 0 3pt 12pt;font-size:9pt;'>"+esc(get("pause_bilan")||D.bilan_defaut)+"</p>";
+  infr.forEach(function(x){ corps+="<p style='margin:0 0 2pt 12pt;font-size:9pt;'>&bull;&nbsp;&nbsp;"+esc(x)+"</p>"; });
+  if(dev.contremaitres&&dev.contremaitres.length){
+    corps+="<p style='margin:4pt 0 2pt 4pt;font-size:8.8pt;font-weight:700;'>Ce qui est attendu des contrema&icirc;tres</p>";
+    dev.contremaitres.forEach(function(x){ corps+="<p style='margin:0 0 2pt 12pt;font-size:9pt;'>&bull;&nbsp;&nbsp;"+esc(x)+"</p>"; });
+  }
+  if(dev.travailleurs&&dev.travailleurs.length){
+    corps+="<p style='margin:4pt 0 2pt 4pt;font-size:8.8pt;font-weight:700;'>Ce qui est attendu des travailleurs</p>";
+    dev.travailleurs.forEach(function(x){ corps+="<p style='margin:0 0 2pt 12pt;font-size:9pt;'>&bull;&nbsp;&nbsp;"+esc(x)+"</p>"; });
+  }
+  corps+="<p style='margin:4pt 0 2pt 4pt;font-size:8.8pt;font-weight:700;'>Politique de s&eacute;curit&eacute; du chantier</p>";
+  corps+="<p style='margin:0 0 2pt 12pt;font-size:9pt;'>"+esc(D.politique)+"</p>";
+
+  var sug=[["Protection individuelle","Outils"],["Garde-corps","P&eacute;rim&egrave;tres de s&eacute;curit&eacute;"],
+           ["Appareils de levage","Tenue des lieux"],["Protection d'incendie","Bouteilles de gaz comprim&eacute;"],
+           ["&Eacute;chafaudages","&Eacute;chelles et escabeaux"],["&Eacute;quipements","Autres"]];
+  var sugHtml="";
+  sug.forEach(function(r){
+    sugHtml+="<tr>"
+      +"<td style='padding:2pt 0;font-size:9.3pt;border:none;'>"+r[0]+" : ______________________________</td>"
+      +"<td style='padding:2pt 0;font-size:9.3pt;border:none;'>"+r[1]+" : ______________________________</td></tr>";
+  });
+
+  var pres="";
+  for(var i=1;i<=6;i++){
+    pres+="<tr>"
+     +"<td style='border:1px solid #000;height:19pt;font-size:9.7pt;padding:2pt 5pt;width:50%;'>"+i+".</td>"
+     +"<td style='border:1px solid #000;height:19pt;font-size:9.7pt;padding:2pt 5pt;width:50%;'>"+(i+6)+".</td></tr>";
+  }
+
+  var h=""
+   +"<table width='100%' cellspacing='0' cellpadding='0' style='border-collapse:collapse;border:none;'><tr>"
+   +"<td style='border:none;vertical-align:top;'><img src=\"data:image/png;base64,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\" width='169' height='20' border='0'></td>"
+   +"<td style='border:none;text-align:right;vertical-align:top;font-size:8pt;color:#808080;'>"
+   +"<u>Programme de pr&eacute;vention chantiers de construction</u></td></tr></table>"
+   +"<p style='text-align:center;font-size:15pt;font-weight:700;color:#212121;margin:8pt 0 5pt 0;'>Annexe 16 &ndash; Pause-s&eacute;curit&eacute;</p>"
+   +"<table width='100%' cellspacing='0' cellpadding='0' style='border-collapse:collapse;margin-bottom:9pt;'><tr>"
+   +"<td style='border:none;border-bottom:2.5pt solid #326836;'></td></tr></table>"
+
+   +"<table width='100%' cellspacing='0' cellpadding='0' border='1' style='border-collapse:collapse;'>"
+   +"<tr><td colspan='2' style='border:1px solid #000;height:26pt;padding:4pt 6pt;font-size:9.5pt;font-weight:700;width:50%;'>Entrepreneur:</td>"
+   +"<td colspan='2' style='border:1px solid #000;height:26pt;padding:4pt 6pt;font-size:9.5pt;font-weight:700;width:50%;'>M&eacute;tier / Occupation:</td></tr>"
+   +"<tr><td style='border:1px solid #000;height:26pt;padding:4pt 6pt;font-size:9.5pt;font-weight:700;width:25%;'>Date:</td>"
+   +"<td style='border:1px solid #000;height:26pt;padding:4pt 6pt;font-size:9.5pt;font-weight:700;width:25%;'>Heure:</td>"
+   +"<td colspan='2' style='border:1px solid #000;height:26pt;padding:4pt 6pt;font-size:9.5pt;font-weight:700;width:50%;'>Lieu:</td></tr>"
+   +"</table>"
+
+   +"<p style='font-size:10.2pt;font-weight:700;margin:12pt 0 7pt 0;'>SUGGESTIONS POUR PAUSES-S&Eacute;CURIT&Eacute; :</p>"
+   +"<table width='100%' cellspacing='0' cellpadding='0' style='border-collapse:collapse;border:none;'>"+sugHtml+"</table>"
+
+   +"<p style='font-size:10.5pt;font-weight:700;margin:14pt 0 5pt 0;'>SUJETS DISCUT&Eacute;S:</p>"
+   +"<table width='100%' cellspacing='0' cellpadding='0' border='1' style='border-collapse:collapse;'>"
+   +"<tr><td style='border:1px solid #000;padding:7pt 9pt;'>"+corps+"</td></tr></table>"
+
+   +"<p style='text-align:center;font-size:10.4pt;font-weight:700;margin:11pt 0 7pt 0;'>Pr&eacute;sences des participants</p>"
+   +"<table width='100%' cellspacing='0' cellpadding='0' border='1' style='border-collapse:collapse;'>"
+   +"<tr><td style='border:1px solid #000;height:21pt;font-size:9.7pt;font-weight:700;text-align:center;'>Noms / Initiales</td>"
+   +"<td style='border:1px solid #000;height:21pt;font-size:9.7pt;font-weight:700;text-align:center;'>Noms / Initiales</td></tr>"
+   +pres+"</table>"
+
+   +"<table width='100%' cellspacing='0' cellpadding='0' style='border-collapse:collapse;border:none;margin-top:14pt;'><tr>"
+   +"<td style='border:none;vertical-align:top;width:52%;font-size:8.9pt;'>"
+   +"<b>Par</b> (Animateur:coordonnateur SST, contremaitre,<br>surintendant, etc.) :</td>"
+   +"<td style='border:none;vertical-align:top;width:48%;text-align:center;font-size:9.7pt;'>"
+   +"______________________________<br>(Signature)</td></tr></table>"
+
+   +"<p style='text-align:right;font-size:8pt;color:#808080;margin-top:16pt;'>"
+   +"V2024/12/09&nbsp;&nbsp;<span style='font-size:11pt;'>Page 147de 210</span></p>";
+
+  return {html:"<html><body>"+h+"</body></html>",
+          nom:"Annexe16_Pause_securite_"+get("r_date")};
+}
+
+function genPauseWord(){
+  var d = pauseWordHtml();
+  if(d){ telechargerWord(d.html, d.nom); }
+}
+
+
+function construirePV() {
   var get=function(id){var e=document.getElementById(id);return e?e.value:"";};
   var noReu=get("r_no")||"—";
   var CSS="*{box-sizing:border-box;margin:0;padding:0;}"
@@ -771,7 +953,7 @@ function genPDF() {
     var titreMod=get("stitre_"+art)||(s.titre+" — "+s.ref);
     var pointsMod=get("spoints_"+art);
     var ptsList=pointsMod?pointsMod.split("\n").filter(function(l){return l.trim();}):s.points;
-    var pts=ptsList.length?"<ul>"+ptsList.map(function(pt){return "<li><b>*</b>"+pt+"</li>";}).join("")+"</ul>":"";
+    var pts=ptsList.length?"<ul>"+ptsList.map(function(pt){return "<li>"+pt+"</li>";}).join("")+"</ul>":"";
     var contenu="<b>"+titreMod+"</b>"+pts+"<span class='pause-txt'>"+D.pause+"</span>";
     addRow(noReu,art,contenu,get("act_"+art),get("suivi_"+art)); art++;
   });
@@ -805,8 +987,9 @@ function genPDF() {
     +"<p style='font-size:11px;margin-top:10px;'><b>Remarques :</b> "+get("r_remarques")+"</p>"
     +"<p style='font-size:11px;margin-top:8px;font-weight:700;'>Prochaine réunion : "+get("r_prochaine")+"</p>"
     +"<p style='font-size:11px;margin-top:4px;'>Compte rendu rédigé par : "+get("r_coss")+"</p>"
+    +blocSignature()
     +"</body></html>";
-  imprimerDoc(html,"Proces_verbal_comite_"+noReu+"_"+get("r_date"));
+  return {html:html, nom:"Proces_verbal_comite_"+noReu+"_"+get("r_date")};
 }
 
 // ── SOUMISSION ──
