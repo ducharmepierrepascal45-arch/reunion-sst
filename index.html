@@ -200,7 +200,7 @@ canvas.sig{border:2px solid var(--gris-brd);width:100%;background:#FAFAFA;touch-
       <div style="margin-top:10px;">
         <div class="card-hdr h-rougeD" style="padding:8px 12px;font-size:10px;margin-bottom:8px;">🦺 Pause sécurité — Bilan et infractions</div>
         <div class="field"><label>Période des observations (ex: semaines du 23 avril au 1er mai)</label><input type="text" id="pause_periode" placeholder="Ex: semaines du 23 avril au 1er mai 2026"></div>
-        <div class="field"><label>Bilan des observations (texte libre)</label><textarea id="pause_bilan" style="min-height:70px;resize:vertical;border:1px solid var(--gris-brd);padding:9px;font-size:13px;font-family:Arial;outline:none;width:100%;"></textarea></div>
+        <button type="button" onclick="chargerRecap()" style="width:100%;background:#7A3C00;color:#fff;border:none;padding:12px;font-size:13px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">⬇ Charger le récap du 3 au 19 août</button><div class="field"><label>Bilan des observations (texte libre)</label><textarea id="pause_bilan" style="min-height:70px;resize:vertical;border:1px solid var(--gris-brd);padding:9px;font-size:13px;font-family:Arial;outline:none;width:100%;"></textarea></div>
         <div class="field">
           <label>Infractions les plus fréquentes (cochez)</label>
           <div id="infr-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:4px;max-height:200px;overflow-y:auto;border:1px solid var(--gris-brd);padding:6px;background:var(--gris-l);"></div>
@@ -238,6 +238,30 @@ var sigCtx = {};
 var sigOn = {};
 var articleEdits = {};
 
+// ── SUJETS AJOUTÉS — récap du 3 au 19 août ──
+D.sujets = D.sujets.concat([{"titre": "Garde-corps et slab grab — tournée de vérification matinale", "ref": "CSTC art. 3.8.2 et 3.8.3", "points": ["13 constats en 12 jours, trois entreprises : pattes mal serrées, slab grabs dévissés, pince trop près du bord de dalle, lisse supérieure trop courte, plinthe manquante.", "Un garde-corps doit résister à 900 N à l'horizontale et 450 N à la verticale, appliqués à tout point de la lisse supérieure.", "Lisse supérieure de 40 mm x 90 mm minimum, montants espacés d'au plus 1,8 m. Un 2x4 raboté (38 x 89 mm) est sous la norme — utiliser du 2x6.", "Aucun 2x4 attaché avec de la broche ne remplace une braise d'acier.", "MESURE CONVENUE : chaque contremaître intègre à sa routine du matin une tournée de vérification lisse supérieure, lisse intermédiaire, plinthe et resserrage des slab grabs.", "Le manuel du fabricant du slab grab doit être disponible aux installateurs — exigé par la CNESST."], "suivi": "Quotidien", "cat": "mda"}, {"titre": "Éclairage des aires de travail", "ref": "CSTC art. 3.2.4 f)", "points": ["6 constats en 12 jours : lumières débranchées après le nettoyage, luminaires posés mais non branchés, secteurs sans éclairage.", "Mesure au luxmètre le 19 août au RDC aile G : 1 lux avec quatre travailleurs sur place.", "Minimum réglementaire : 50 lux sur les voies de circulation et les allées, 250 lux pour les travaux de gros œuvre.", "Le nettoyage ne justifie pas de laisser un secteur débranché : rebrancher avant de quitter la zone.", "Tout secteur sans éclairage suffisant est fermé jusqu'à correction."], "suivi": "Quotidien", "cat": "mda"}, {"titre": "Rallonges électriques — suspension, sol et sorties", "ref": "CSTC art. 2.11.4, 2.11.5 et 2.11.6", "points": ["4 constats : broche métallique comme support, rallonge dans une sortie d'escalier, fil temporaire au niveau du visage.", "Les supports de suspension ne doivent être ni conducteurs ni coupants — la broche est les deux.", "La hauteur de suspension doit permettre le libre passage.", "Une rallonge au sol doit être protégée contre les dommages mécaniques et ne jamais obstruer une issue.", "Une rallonge non utilisée est débranchée et rangée."], "suivi": "En tout temps", "cat": "mda"}, {"titre": "Plateformes élévatrices — périmètre et inspection quotidienne", "ref": "CSTC art. 2.15.12 et 3.8.2", "points": ["4 constats : périmètres absents autour de ciseaux en opération, inspection quotidienne non faite deux fois par la même entreprise.", "L'inspection quotidienne avant utilisation est obligatoire et se consigne au registre.", "L'appareil ne sert qu'à déplacer les personnes, l'outillage et les matériaux nécessaires aux travaux, sans dépasser sa charge nominale et selon les spécifications du fabricant.", "Périmètre obligatoire au sol dès qu'il y a risque de chute d'objets vers une aire de circulation.", "Jamais de plateforme devant une sortie d'urgence sans périmètre ni contrôle d'accès."], "suivi": "Quotidien", "cat": "mda"}, {"titre": "Protection respiratoire — port, entreposage et fit test", "ref": "CSTC art. 2.10.8 / RSST art. 45.1", "points": ["6 constats : masques descendus sur le menton, P100 non porté en zone contaminée.", "Constat de la CNESST du 18 août : demi-masques et cartouches entreposés dans le même sac.", "Retirer les cartouches, les sceller et les ranger séparément du masque; masque nettoyé et rangé à l'abri de la contamination, de la poussière et du soleil.", "Une cartouche entamée continue de se consommer à l'air ambiant.", "Fit test valide pour chaque porteur, joint facial rasé de près. Tout travailleur muté vers le côté nord doit être rasé et fit-testé avant l'affectation."], "suivi": "En tout temps", "cat": "mda"}, {"titre": "Protection des ouvertures de plancher", "ref": "CSTC art. 2.9.1 et 3.2.4 i)", "points": ["Contreplaqués protégeant des trous au RDC vus déplacés ou manquants; un contreplaqué défoncé par un ciseau.", "Mezzanine de plus de 3 m protégée par un cône seulement.", "Une ouverture doit être entourée d'un garde-corps ou fermée par un couvercle résistant à au moins 2,4 kN/m².", "À défaut : barrière continue ou tréteaux d'au moins 0,7 m installés à 0,9 à 1,2 m de l'ouverture, ou ligne d'avertissement conforme à l'art. 2.9.4.1.", "Un cône ne satisfait à aucune de ces exigences.", "Tournée générale du RDC demandée pour recenser et refermer toutes les ouvertures."], "suivi": "Quotidien", "cat": "mda"}, {"titre": "Analyses sécuritaires de tâches (AST) — remise quotidienne", "ref": "CSTC art. 2.4.1", "points": ["Quatre AST manquantes en neuf jours : Tandem, Jean Roy Ventilation, Plombier 3P, Électrique.", "L'AST se fait chaque matin AVANT le début des travaux et se remet au coordonnateur SST.", "Une AST remise en fin de journée ne remplit pas sa fonction : elle sert à planifier, pas à justifier.", "Responsabilité du contremaître de chaque sous-traitant, pas du maître d'œuvre.", "Aucune AST remise = travaux non autorisés dans le secteur concerné."], "suivi": "Quotidien", "cat": "mda"}, {"titre": "Protection incendie — extincteurs et bouteilles de propane", "ref": "CSTC art. 3.4.3, 3.13.7 et 3.13.10", "points": ["Recalcul des superficies par section : 8 sections au chantier. Il manque 3 extincteurs pour les ailes A, B, C et D côté nord.", "Un extincteur près des sorties à chaque étage pour les premiers 500 m², plus un additionnel par tranche de 500 m² ou fraction.", "L'emplacement compte autant que le nombre : près des sorties, jamais empilés au centre du plancher.", "Bouteilles de propane laissées au toit sans extincteur à proximité — avis écrit transmis au sous-traitant en toiture.", "Hors utilisation, une bouteille doit être retenue debout, soupape vers le haut, capuchon en place, et entreposée à l'extérieur à l'abri des manipulations non autorisées.", "Type ABC homologué ULC, chargé, avec le nom du responsable de l'entretien et la date du dernier examen."], "suivi": "En tout temps", "cat": "mda"}, {"titre": "Confinement, suie et poussière de silice", "ref": "CSTC art. 3.2.2 et 2.10.8", "points": ["Confinement de la zone glace sèche défait alors que la suie était encore au sol — les travailleurs la transportent partout sur le chantier.", "SÉQUENCE OBLIGATOIRE : nettoyage complet et vérification visuelle AVANT le démantèlement du confinement, jamais l'inverse.", "Tas de poussière de silice laissés au 2e après balayage à sec.", "Le balayage à sec de la silice est interdit : il remet en suspension les particules respirables. Aspirateur HEPA ou méthode humide seulement.", "Sas de déshabillement : le côté sale et le côté propre ne doivent jamais se confondre.", "Tapis collant à la sortie et retrait de l'appareil respiratoire AVANT le franchissement vers le côté propre."], "suivi": "En tout temps", "cat": "mda"}, {"titre": "Chutes de hauteur — équipements antichute et ligne d'avertissement", "ref": "CSTC art. 2.9.1, 2.9.4.1, 2.10.12 et 2.10.15", "points": ["Une expulsion le 5 août : circulation hors ligne d'avertissement au toit. Tolérance zéro.", "Deux arrêts de travaux le 11 août : escabeau au balcon, ciseau sans périmètre près d'une sortie d'urgence.", "Le 14 août, corde antichute non réglementaire trouvée au toit : dégradée par les UV, contaminée, attachée en nœud coulant sur de l'acier coupant. Retirée et détruite. AUCUN PROPRIÉTAIRE IDENTIFIÉ.", "Une corde d'assurance ne doit jamais être en contact avec une arête vive; aucun nœud ne doit y être formé.", "Un point d'ancrage doit résister à 18 kN ou être conçu par un ingénieur.", "La ligne d'avertissement doit être à 2 m ou plus du bord, continue, avec fanions aux 2 m maximum, à une hauteur de 0,7 à 1,2 m.", "Chaque sous-traitant qui travaille au toit doit produire son registre d'inspection annuelle des équipements antichute."], "suivi": "En tout temps", "cat": "mda"}]);
+
+// ── CHARGEMENT DU RÉCAP 3 AU 19 AOÛT ──
+var RECAP_ODJ = {"pf0_txt": "Un accident déclaré le 11 août 2026. Un travailleur d'un sous-traitant en démolition s'est cogné le bas du dos sous un transformateur en se relevant, dans une chambre électrique. Blessure légère, retour au travail immédiat, aucune perte de temps. Enquête effectuée, témoin identifié, annexe 9.1 remplie. Aucun événement à déclaration obligatoire au sens de l'article 62 de la LSST pour la période.", "pf1_txt": "Une inspectrice de la CNESST a visité le chantier le 18 août 2026. Huit constats ont été formulés : 1) contenant de produit non identifié à l'entrée de la zone contaminée — étiquetage obligatoire lors du transvasement; 2) demi-masques et cartouches entreposés dans le même sac; 3) sas de déshabillement — côté sale et côté propre confondus; 4) slab grab utilisé de façon non conforme au manuel du fabricant; 5) travailleur au sol à éloigner de la source lors du nettoyage des conduits de ventilation; 6) garde-corps mou à l'escalier de l'entrée sud — corrigé sur place; 7) marche à installer au toit, parapets de plus de 12 po; 8) rabattage de poussière requis dans la cour extérieure.\n\nSuivi : une procédure d'entrée et de sortie de la zone contaminée a été rédigée et mise en application dès le 19 août. Observation de la sortie des travailleurs effectuée le midi : le sas est utilisé pour le Tyvek et les gants; le tapis collant est absent et l'appareil respiratoire est encore retiré du côté propre. Mesures convenues avec le sous-traitant à 12 h 00. Procédure à compléter et à faire signer.", "pf2_txt": "Période couverte : du 3 au 19 août 2026. Dix jours ouvrables, 73 à 110 travailleurs par jour, jusqu'à 8 entreprises actives simultanément. Environ 70 interventions documentées et 20 accueils de travailleurs. Inspection journalière complète du chantier chaque jour ouvrable, 86 points vérifiés, consignée dans Procore avec photos.\n\nAvis et sanctions de la période : une expulsion le 5 août (Toiture LVPT, circulation hors ligne d'avertissement au toit), deux arrêts de travaux le 11 août corrigés sur place, et une corde antichute non réglementaire retirée et détruite le 14 août.", "pf3_txt": "Tous les sous-traitants doivent remettre à l'agent de sécurité leur pause sécurité au plus tard le vendredi suivant le comité. Les items discutés doivent y paraître. Pour les sous-traitants présents temporairement, la pause sécurité doit se faire le jour même.\n\nDocuments attendus : manuel d'utilisateur du slab grab (demandé par la CNESST), plan de sauvetage pour la zone de décapage à la glace sèche, procédure d'entrée-sortie complétée et signée, registres d'inspection annuelle des équipements antichute des sous-traitants qui travaillent au toit, et résultats de clairance de MSEI.", "pf5_txt": "1. Extincteurs — 3 unités manquantes pour les ailes A à D côté nord. Autorisation demandée par écrit au surintendant et au chargé de projet.\n2. Corde antichute non réglementaire trouvée au toit le 14 août, propriétaire non identifié. Chaque entreprise est invitée à vérifier son inventaire d'équipements antichute.\n3. Inspection formelle du toit demandée avec les trois sous-traitants concernés avant la reprise des travaux en toiture.\n4. Effectif de 107 à 110 travailleurs : deux secouristes par quart sont requis et un local de premiers soins doit être aménagé. Liste des secouristes mise à jour le 17 août.\n5. Ligne d'avertissement au toit — rappel que la distance réglementaire est de 2 m et non de 6 pi.\n6. Contraintes thermiques — trois jours à 31-35 °C durant la période. Pauses selon la grille de l'IRSST et zones froides avec eau et air climatisé maintenues."};
+var RECAP_REP = {"pf0": "oui", "pf1": "oui"};
+function chargerRecap(){
+  if(!confirm("Charger le récap du 3 au 19 août?\n\nLes 10 sujets du récap seront cochés et les sections Accidents, CNESST, Suivi, Pauses et Varia seront remplies.")) return;
+  var n = D.sujets.length;
+  for(var i = n-10; i < n; i++){ sujetSel[i] = true; }
+  try{
+    var e = JSON.parse(localStorage.getItem("reunion_etat")||"{}");
+    e.odj = e.odj || {}; e.rep = e.rep || {}; e.sujetSel = sujetSel;
+    Object.keys(RECAP_ODJ).forEach(function(k){ e.odj[k] = RECAP_ODJ[k]; });
+    Object.keys(RECAP_REP).forEach(function(k){ e.rep[k] = RECAP_REP[k]; });
+    localStorage.setItem("reunion_etat", JSON.stringify(e));
+  }catch(x){}
+  for(var j = n-10; j < n; j++){
+    var el = document.getElementById("sjp_"+j); if(el) el.className = "sujet-pick sel";
+    var ck = document.getElementById("sjchk_"+j); if(ck) ck.textContent = "\u2713";
+  }
+  showToast("Récap chargé — allez à l'étape Ordre du jour");
+}
+
 function goPage(n) {
   document.querySelectorAll(".page").forEach(function(p){ p.classList.remove("active"); });
   document.querySelectorAll(".step").forEach(function(s,i){
@@ -261,6 +285,7 @@ function nextPage(n){
 var customSujets = [];
 function initSujets() {
   var c = document.getElementById("sujets-pick");
+  if(!c || c.childElementCount>0) return;   // garde anti-duplication
   // Groupe général
   var hG = document.createElement("div");
   hG.style.cssText = "font-size:11px;font-weight:700;color:var(--vert);text-transform:uppercase;letter-spacing:1px;margin:4px 0 8px;padding-bottom:4px;border-bottom:2px solid var(--vert);";
@@ -363,12 +388,20 @@ function genererODJ() {
   });
 
   // Articles procéduraux fin (avec types spéciaux)
-  D.procedure_fin.forEach(function(p){
-    cont.appendChild(makeArticleFin(art++, p));
+  D.procedure_fin.forEach(function(p,fi){
+    cont.appendChild(makeArticleFin(art++, p, fi));
   });
-  try{var _e=JSON.parse(localStorage.getItem("reunion_etat")||"{}");if(_e.odj)Object.keys(_e.odj).forEach(function(id){var el=document.getElementById(id);if(el)el.value=_e.odj[id];});}catch(ex){}
-  document.querySelectorAll("[id^=stitre_],[id^=spoints_],[id^=txt_],[id^=act_],[id^=suivi_]").forEach(function(el){el.addEventListener("input",sauverEtat);});
-
+  // Restauration par CLE STABLE (ne glisse plus si un sujet est ajoute ou retire)
+  try{
+    var _e=JSON.parse(localStorage.getItem("reunion_etat")||"{}");
+    if(_e.odj){
+      document.querySelectorAll("#odj-genere [data-k]").forEach(function(el){
+        var v=_e.odj[el.dataset.k];
+        if(v!==undefined && v!==null) el.value=v;
+      });
+    }
+  }catch(ex){}
+  document.querySelectorAll("#odj-genere [data-k]").forEach(function(el){el.addEventListener("input",sauverEtat);});
 }
 
 function retirerSujetODJ(sujetIdx, num) {
@@ -379,10 +412,9 @@ function retirerSujetODJ(sujetIdx, num) {
   var chk = document.getElementById("sjchk_"+sujetIdx);
   if(sjp) sjp.className = "sujet-pick";
   if(chk) chk.textContent = "";
-  // Supprimer l'article de l'ODJ
-  var art = document.getElementById("artsujet_"+num);
-  if(art) art.remove();
+  // Sauver AVANT de regenerer, puis renumeroter proprement (evite les doublons)
   sauverEtat();
+  genererODJ();
 }
 
 
@@ -392,41 +424,43 @@ function makeArticleSujet(num, sujetIdx, s) {
   div.id = "artsujet_"+num;
   var pointsTxt = (s.points||[]).join("\n");
   var h = '<div class="article-hdr"><span class="num">POINT '+(num<10?"0"+num:num)+'</span> '
-    + '<input type="text" id="stitre_'+num+'" value="'+(s.titre+" — "+s.ref).replace(/"/g,"&quot;")+'" style="flex:1;border:1px solid transparent;background:transparent;font-size:13px;font-weight:700;color:#fff;font-family:Arial;outline:none;padding:2px 4px;" onfocus="this.style.background=\'#fff\';this.style.color=\'#1a1a1a\';this.style.border=\'1px solid #999\';" onblur="this.style.background=\'transparent\';this.style.color=\'#fff\';this.style.border=\'1px solid transparent\';">';
+    + '<input type="text" id="stitre_'+num+'" data-k="sj'+sujetIdx+'_tit" value="'+(s.titre+" — "+s.ref).replace(/"/g,"&quot;")+'" style="flex:1;border:1px solid transparent;background:transparent;font-size:13px;font-weight:700;color:#fff;font-family:Arial;outline:none;padding:2px 4px;" onfocus="this.style.background=\'#fff\';this.style.color=\'#1a1a1a\';this.style.border=\'1px solid #999\';" onblur="this.style.background=\'transparent\';this.style.color=\'#fff\';this.style.border=\'1px solid transparent\';">';
   h += '<button class="btn-retirer" onclick="retirerSujetODJ('+sujetIdx+','+num+')" style="margin-left:6px;">Retirer</button>';
   h += '</div>';
   h += '<div class="article-body">';
   h += '<label style="font-size:9px;font-weight:700;color:#7A3C00;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:3px;">Points (un par ligne — modifiez, ajoutez ou retirez) :</label>';
-  h += '<textarea id="spoints_'+num+'" style="width:100%;border:1px solid var(--gris-brd);padding:8px;font-size:12px;font-family:Arial;min-height:100px;resize:vertical;outline:none;line-height:1.5;">'+pointsTxt.replace(/</g,"&lt;")+'</textarea>';
+  h += '<textarea id="spoints_'+num+'" data-k="sj'+sujetIdx+'_pts" style="width:100%;border:1px solid var(--gris-brd);padding:8px;font-size:12px;font-family:Arial;min-height:100px;resize:vertical;outline:none;line-height:1.5;">'+pointsTxt.replace(/</g,"&lt;")+'</textarea>';
   h += '<div class="pause-txt" style="margin-top:8px;">'+D.pause+'</div>';
   h += '<div class="article-edit">';
-  h += '<input type="text" id="act_'+num+'" placeholder="Action par" value="Tous">';
-  h += '<input type="text" id="suivi_'+num+'" placeholder="Suivi" value="'+(s.suivi||"")+'">';
+  h += '<input type="text" id="act_'+num+'" data-k="sj'+sujetIdx+'_act" placeholder="Action par" value="Tous">';
+  h += '<input type="text" id="suivi_'+num+'" data-k="sj'+sujetIdx+'_sui" placeholder="Suivi" value="'+(s.suivi||"")+'">';
   h += '</div></div>';
   div.innerHTML = h;
   return div;
 }
 
-function makeArticle(num, titre, contenuHtml, pause, action, suivi, editable) {
+function makeArticle(num, titre, contenuHtml, pause, action, suivi, editable, kbase) {
   var div = document.createElement("div");
   div.className = "article-card";
   var idx = num;
+  var K = kbase || ("pr"+num);
   var h = '<div class="article-hdr"><span class="num">POINT '+(num<10?"0"+num:num)+'</span> <span class="titre">'+titre+'</span></div>';
   h += '<div class="article-body">';
   h += contenuHtml;
   if(pause) h += '<div class="pause-txt">'+pause+'</div>';
   h += '<div class="article-edit">';
-  h += '<input type="text" id="act_'+idx+'" placeholder="Action par" value="'+(action||"")+'">';
-  h += '<input type="text" id="suivi_'+idx+'" placeholder="Suivi" value="'+(suivi||"")+'">';
+  h += '<input type="text" id="act_'+idx+'" data-k="'+K+'_act" placeholder="Action par" value="'+(action||"")+'">';
+  h += '<input type="text" id="suivi_'+idx+'" data-k="'+K+'_sui" placeholder="Suivi" value="'+(suivi||"")+'">';
   h += '</div></div>';
   div.innerHTML = h;
   return div;
 }
 
-function makeArticleFin(num, p) {
+function makeArticleFin(num, p, fi) {
   var div = document.createElement("div");
   div.className = "article-card";
   var idx = num;
+  var K = "pf"+(fi===undefined?num:fi);
   var h = '<div class="article-hdr"><span class="num">POINT '+(num<10?"0"+num:num)+'</span> <span class="titre">'+p.titre+'</span></div>';
   h += '<div class="article-body">';
 
@@ -439,29 +473,32 @@ function makeArticleFin(num, p) {
     h += '</div>';
     // Zone texte (cachée par défaut, montrée si OUI)
     h += '<div id="on_zone_'+idx+'" style="display:none;">';
-    h += '<textarea id="txt_'+idx+'" placeholder="'+p.placeholder+'" style="width:100%;border:1px solid var(--gris-brd);padding:9px;font-size:13px;font-family:Arial;min-height:75px;resize:vertical;outline:none;"></textarea>';
+    h += '<textarea id="txt_'+idx+'" data-k="'+K+'_txt" placeholder="'+p.placeholder+'" style="width:100%;border:1px solid var(--gris-brd);padding:9px;font-size:13px;font-family:Arial;min-height:75px;resize:vertical;outline:none;"></textarea>';
     h += '</div>';
-    // Marquer NON par défaut
-    setTimeout(function(){ setOuiNon(idx,"non"); }, 10);
+    // Restaurer la reponse sauvegardee, sinon NON par defaut
+    setTimeout(function(){ setOuiNon(idx, lireRep(K)==="oui" ? "oui" : "non", true); }, 10);
   }
   else if(p.type === "varia") {
     h += '<div style="font-size:11px;color:#666;font-style:italic;margin-bottom:8px;">'+p.placeholder+'</div>';
-    h += '<textarea id="txt_'+idx+'" placeholder="Aucun point varia, ou inscrivez les points divers ici..." style="width:100%;border:1px solid var(--gris-brd);padding:9px;font-size:13px;font-family:Arial;min-height:80px;resize:vertical;outline:none;"></textarea>';
+    h += '<textarea id="txt_'+idx+'" data-k="'+K+'_txt" placeholder="Aucun point varia, ou inscrivez les points divers ici..." style="width:100%;border:1px solid var(--gris-brd);padding:9px;font-size:13px;font-family:Arial;min-height:80px;resize:vertical;outline:none;"></textarea>';
   }
   else {
     // texte éditable standard
-    h += '<textarea id="txt_'+idx+'" style="width:100%;border:1px solid var(--gris-brd);padding:9px;font-size:13px;font-family:Arial;min-height:60px;resize:vertical;outline:none;">'+(p.texte||"")+'</textarea>';
+    h += '<textarea id="txt_'+idx+'" data-k="'+K+'_txt" style="width:100%;border:1px solid var(--gris-brd);padding:9px;font-size:13px;font-family:Arial;min-height:60px;resize:vertical;outline:none;">'+(p.texte||"")+'</textarea>';
   }
 
   h += '<div class="article-edit">';
-  h += '<input type="text" id="act_'+idx+'" placeholder="Action par" value="'+(p.action||"")+'">';
-  h += '<input type="text" id="suivi_'+idx+'" placeholder="Suivi" value="'+(p.suivi||"")+'">';
+  h += '<input type="text" id="act_'+idx+'" data-k="'+K+'_act" placeholder="Action par" value="'+(p.action||"")+'">';
+  h += '<input type="text" id="suivi_'+idx+'" data-k="'+K+'_sui" placeholder="Suivi" value="'+(p.suivi||"")+'">';
   h += '</div></div>';
   div.innerHTML = h;
   return div;
 }
 
-function setOuiNon(idx, val) {
+function lireRep(K){
+  try{ var e=JSON.parse(localStorage.getItem("reunion_etat")||"{}"); return (e.rep&&e.rep[K])||""; }catch(x){ return ""; }
+}
+function setOuiNon(idx, val, silencieux) {
   var btnNon = document.getElementById("on_non_"+idx);
   var btnOui = document.getElementById("on_oui_"+idx);
   var zone = document.getElementById("on_zone_"+idx);
@@ -477,6 +514,15 @@ function setOuiNon(idx, val) {
     zone.style.display="block";
     if(ta) ta.dataset.repNon = "0";
   }
+  if(ta && ta.dataset.k){
+    try{
+      var e=JSON.parse(localStorage.getItem("reunion_etat")||"{}");
+      e.rep = e.rep || {};
+      e.rep[ta.dataset.k.replace(/_txt$/,"")] = val;
+      localStorage.setItem("reunion_etat", JSON.stringify(e));
+    }catch(x){}
+  }
+  if(!silencieux) sauverEtat();
 }
 
 // ── PRÉSENCES — grille imprimable (les travailleurs remplissent eux-mêmes) ──
@@ -580,8 +626,9 @@ function sauverEtat(){
     ["r_no","r_date","r_heure","r_lieu","r_chantier","r_mo","r_coss","r_prochaine","pause_bilan","pause_periode","r_remarques"].forEach(function(id){
       var el=document.getElementById(id);if(el)e.infos[id]=el.value;
     });
-    document.querySelectorAll("[id^=stitre_],[id^=spoints_],[id^=txt_],[id^=act_],[id^=suivi_]").forEach(function(el){
-      if(el.value)e.odj[el.id]=el.value;
+    try{var anc=JSON.parse(localStorage.getItem("reunion_etat")||"{}"); if(anc.rep) e.rep=anc.rep;}catch(x){}
+    document.querySelectorAll("#odj-genere [data-k]").forEach(function(el){
+      e.odj[el.dataset.k]=el.value;
     });
     localStorage.setItem("reunion_etat",JSON.stringify(e));
   }catch(err){}
@@ -601,9 +648,7 @@ function chargerEtat(){
     if(e.infos)Object.keys(e.infos).forEach(function(id){
       var el=document.getElementById(id);if(el&&e.infos[id])el.value=e.infos[id];
     });
-    if(e.odj)setTimeout(function(){
-      Object.keys(e.odj).forEach(function(id){var el=document.getElementById(id);if(el)el.value=e.odj[id];});
-    },500);
+    // l'ODJ est restaure par cle stable dans genererODJ()
   }catch(err){}
 }
 
